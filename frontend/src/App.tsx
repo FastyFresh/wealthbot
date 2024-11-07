@@ -1,44 +1,39 @@
-import React from 'react'
-import { WalletProvider } from './providers/WalletProvider'
-import { WalletConnect } from './components/wallet/WalletConnect'
+import React from 'react';
+import './App.css';
+import { TradingDashboard } from './components/trading/TradingDashboard';
+import { WalletConnect } from './components/wallet/WalletConnect';
 
 function App() {
   return (
-    <WalletProvider>
-      <div className="min-h-screen bg-gray-50">
-        <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex justify-between h-16 items-center">
-              <h1 className="text-2xl font-bold text-primary-600">WealthBot</h1>
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            WealthBot Trading Platform
+          </h1>
+        </div>
+      </header>
+
+      <main>
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <div className="space-y-6">
               <WalletConnect />
+              <TradingDashboard />
             </div>
           </div>
-        </nav>
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="instructions">
-            <h2 className="instruction-step">How to run this application:</h2>
-            
-            <p className="instruction-step">1. Install dependencies:</p>
-            <code className="instruction-code">cd frontend</code>
-            <code className="instruction-code">npm install</code>
-            
-            <p className="instruction-step">2. Start the development server:</p>
-            <code className="instruction-code">npm run dev</code>
-            
-            <p className="instruction-step">3. Open in your browser:</p>
-            <code className="instruction-code">http://localhost:5174</code>
-            
-            <p className="instruction-step">Prerequisites:</p>
-            <ul className="list-disc list-inside text-green-600 ml-4">
-              <li>Node.js installed</li>
-              <li>Phantom wallet browser extension</li>
-              <li>Modern web browser (Chrome, Firefox, or Edge)</li>
-            </ul>
-          </div>
-        </main>
-      </div>
-    </WalletProvider>
-  )
+        </div>
+      </main>
+
+      <footer className="bg-white shadow mt-8">
+        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-gray-500 text-sm">
+            Powered by AI Trading Algorithms - {new Date().getFullYear()}
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
 }
 
-export default App
+export default App;
