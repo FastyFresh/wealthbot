@@ -1,111 +1,99 @@
-# WealthBot - AI-Powered Trading Platform
+# Wealthbot Docker Setup
 
-WealthBot is a modern trading platform that combines machine learning with technical analysis to provide intelligent trading signals for cryptocurrency markets.
+This repository contains Docker configurations for both development and production environments.
 
-## Features
+## Prerequisites
 
-- 🤖 Machine Learning Price Predictions
-- 📊 Real-time Technical Analysis
-- 💹 Live Market Data Integration
-- 🔄 Automated Trading Signals
-- 📱 Responsive Design
-- 🔒 Wallet Integration
-- 🐳 Docker Support
+- Docker installed on your system
+- Docker Compose installed on your system
 
-## Tech Stack
+## Testing the Application
 
-- **Frontend**: React + TypeScript + Vite
-- **ML**: TensorFlow.js
-- **Technical Analysis**: TechnicalIndicators
-- **Market Data**: CCXT
-- **Styling**: Tailwind CSS
-- **Containerization**: Docker
+### Development Environment
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v18 or higher)
-- npm or yarn
-- Docker (optional)
-
-### Installation
-
-1. Clone the repository:
+1. Start the development environment:
 ```bash
-git clone https://github.com/yourusername/wealthbot.git
-cd wealthbot
+docker-compose up frontend-dev --build
 ```
+This will:
+- Build the development container
+- Start the development server on port 3001
+- Enable hot-reloading for development
+- Mount your local files into the container
 
-2. Install dependencies:
+Access the development version at: http://localhost:3001
+
+### Production Environment
+
+1. Start the production environment:
 ```bash
-cd frontend
-npm install
+docker-compose up frontend-prod --build
 ```
+This will:
+- Build an optimized production version
+- Serve it through Nginx on port 80
+- Use production-optimized settings
 
-3. Start the development server:
+Access the production version at: http://localhost:80
+
+## Docker Commands Reference
+
+### View Logs
 ```bash
-npm run dev
+# View development logs
+docker-compose logs frontend-dev
+
+# View production logs
+docker-compose logs frontend-prod
 ```
 
-### Docker Setup
-
-1. Build the development container:
+### Stop Services
 ```bash
-docker-compose up frontend-dev
+# Stop all services
+docker-compose down
+
+# Stop specific service
+docker-compose stop frontend-dev
+docker-compose stop frontend-prod
 ```
 
-2. Build for production:
+### Rebuild Services
 ```bash
-docker-compose up frontend-prod
+# Rebuild development
+docker-compose up frontend-dev --build
+
+# Rebuild production
+docker-compose up frontend-prod --build
 ```
 
-## ML Trading Strategy
+## Configuration
 
-The platform uses a sophisticated LSTM (Long Short-Term Memory) neural network to predict price movements:
+- Development server runs on port 3001
+- Production server runs on port 80
+- Environment variables are configured in docker-compose.yml
+- Nginx configuration is located at frontend/nginx.conf
+- Development configuration is in frontend/Dockerfile.dev
+- Production configuration is in frontend/Dockerfile
 
-- Input: 30 days of OHLCV (Open, High, Low, Close, Volume) data
-- Features: Technical indicators (RSI, MACD, Bollinger Bands)
-- Output: Price prediction and trading signals
+## Troubleshooting
 
-### Trading Signals
+If you encounter any issues:
 
-- **Strong Buy**: Prediction > +2% and RSI < 70
-- **Buy**: Prediction > +0.5% and RSI < 60
-- **Strong Sell**: Prediction < -2% and RSI > 30
-- **Sell**: Prediction < -0.5% and RSI > 40
-- **Neutral**: All other conditions
-
-## Project Structure
-
-```
-frontend/
-├── src/
-│   ├── components/
-│   │   ├── trading/       # Trading components
-│   │   └── wallet/        # Wallet integration
-│   ├── services/
-│   │   └── TradingStrategy.ts  # ML and trading logic
-│   └── types/             # TypeScript definitions
-├── Dockerfile            # Production build
-├── Dockerfile.dev        # Development build
-└── docker-compose.yml    # Docker configuration
+1. Check the logs:
+```bash
+docker-compose logs frontend-dev
+# or
+docker-compose logs frontend-prod
 ```
 
-## Contributing
+2. Rebuild the containers:
+```bash
+docker-compose down
+docker-compose up frontend-dev --build
+# or
+docker-compose up frontend-prod --build
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- TensorFlow.js for ML capabilities
-- CCXT for cryptocurrency market data
-- TechnicalIndicators for analysis tools
+3. Clean Docker cache:
+```bash
+docker system p

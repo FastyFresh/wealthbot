@@ -1,36 +1,47 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      'socks-proxy-agent': 'empty-module',
-      'http': 'empty-module',
-      'https': 'empty-module',
-      'net': 'empty-module',
-      'tls': 'empty-module',
-      'crypto': 'crypto-browserify',
-      'stream': 'stream-browserify',
-      'zlib': 'browserify-zlib',
-      'util': 'util',
-      'buffer': 'buffer',
-    },
+      'socks-proxy-agent': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      'http': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      'https': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      'net': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      'tls': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      'crypto': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      'stream': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      'zlib': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      'util': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      'buffer': path.resolve(__dirname, './src/utils/polyfills.ts'),
+      '@': path.resolve(__dirname, './src'),
+    }
   },
   define: {
     'process.env': {},
     global: 'globalThis',
   },
-  optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        global: 'globalThis'
-      }
-    }
-  },
   server: {
-    port: 4000,
+    port: 3001,
     host: true,
     cors: true,
+  },
+  build: {
+    rollupOptions: {
+      external: [
+        'socks-proxy-agent',
+        'http',
+        'https',
+        'net',
+        'tls',
+        'crypto',
+        'stream',
+        'zlib',
+        'util',
+        'buffer'
+      ]
+    }
   }
 });

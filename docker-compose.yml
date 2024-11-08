@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # Development service with hot-reload
   frontend-dev:
     build:
       context: ./frontend
@@ -10,20 +7,20 @@ services:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:8080
-    command: npm run dev -- --host
+    command: npm run dev -- --host --port 3001
     networks:
       - wealthbot-network
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3000"]
+      test: ["CMD", "wget", "--spider", "http://localhost:3001"]
       interval: 10s
       timeout: 5s
       retries: 3
+    restart: unless-stopped
 
-  # Production service
   frontend-prod:
     build:
       context: ./frontend
@@ -40,6 +37,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    restart: unless-stopped
 
 networks:
   wealthbot-network:
