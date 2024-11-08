@@ -4,11 +4,23 @@
 ## Objective
 Wealthbot aims to help users grow their equity autonomously by trading SOL perpetuals on the Drift Protocol within the Solana blockchain. The app uses agent-driven operations inspired by hedge fund strategies, targeting long-term compounded growth with a goal of reaching $1,000,000 in equity over 3-5 years.
 
+## "Set It and Forget It" Philosophy
+Wealthbot is designed for complete automation with minimal user intervention:
+1. Connect your Phantom wallet (minimum $125 SOL balance for gas fees)
+2. Deposit minimum $100 SOL to start trading
+3. Click "Start" and let the autonomous system handle everything
+4. Optionally deposit more funds anytime to accelerate growth
+5. Monitor your progress through the dashboard
+
 ## Core Features
 
 ### 1. User Access
+- Simple One-Click Start: Connect wallet, deposit, and click start
 - Wallet-Based Login: Users access Wealthbot via their Phantom wallet with no additional sign-up requirements
-- Minimum Investment: Requires a $125 SOL balance to start, with a $100 minimum investment
+- Minimum Requirements:
+  - $125 SOL in Phantom wallet (includes buffer for gas fees)
+  - $100 SOL minimum initial deposit for trading
+  - Additional deposits accepted anytime to accelerate growth
 
 ### 2. Autonomous Trading Engine
 The system employs multiple specialized agents working in concert:
@@ -22,6 +34,7 @@ The system employs multiple specialized agents working in concert:
 ### 3. User Dashboard
 - Displays key metrics like profit/loss, daily compounded growth rate, open trades, and equity status
 - Real-Time Strategy Updates: Shows live adjustments while limiting notifications to critical updates
+- Simple deposit interface to add funds when desired
 
 ### 4. Technical Stack
 
@@ -39,7 +52,7 @@ The system employs multiple specialized agents working in concert:
 - Integrates Solana Web3.js and Drift Protocol SDK
 
 ## Key Differentiator
-Wealthbot stands out for its agent-driven, hedge-fund-style trading strategy on a decentralized platform, targeting significant long-term equity growth for users with minimal intervention.
+Wealthbot stands out as a true "set it and forget it" trading solution on a decentralized platform. Users simply deposit funds and let the autonomous system work toward the goal of significant equity growth, with the flexibility to accelerate growth through additional deposits at any time.
 
 ## Installation and Setup
 
