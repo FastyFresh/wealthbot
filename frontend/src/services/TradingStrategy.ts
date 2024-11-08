@@ -1,5 +1,7 @@
+
 import * as tf from '@tensorflow/tfjs';
 import { RSI, BollingerBands } from 'technicalindicators';
+import { GoalTrackingService } from './GoalTrackingService';
 
 interface MarketData {
     timestamp: number;
@@ -10,12 +12,23 @@ interface MarketData {
     volume: number;
 }
 
+interface PredictionResult {
+    predictedPrice: number;
+    confidence: number;
+    volatility: number;
+    trend: 'bullish' | 'bearish' | 'neutral';
+}
+
 export class TradingStrategy {
     private model: tf.Sequential | null = null;
     private baseUrl = 'https://api.binance.com/api/v3';
+    private goalTracker: GoalTrackingService;
+    private recentDailyReturns: number[] = [];
+    private startDate: number;
     
-    constructor() {
-        // Initialize TensorFlow model
+    constructor(initialDeposit: number) {
+        this.goalTracker = new GoalTrackingService(initialDeposit);
+        this.startDate = Date.now();
         this.initialize();
     }
 
@@ -120,6 +133,16 @@ export class TradingStrategy {
         return ema;
     }
 
+    private calculateVolatility(data: MarketData[], window: number = 20): number {
+        const returns = data.slice(-window).map((d, i, arr) => 
+            i === 0 ? 0 : (d.close - arr[i-1].close) / arr[i-1].close
+        );
+        
+        const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+        const squaredDiffs = returns.map(r => Math.pow(r - mean, 2));
+        return Math.sqrt(squaredDiffs.reduce((a, b) => a + b, 0) / returns.length);
+    }
+
     async trainModel(data: MarketData[]) {
         const windowSize = 30;
         const features = this.prepareFeatures(data);
@@ -175,7 +198,7 @@ export class TradingStrategy {
         return labels;
     }
 
-    async predict(data: MarketData[]) {
+    async predict(data: MarketData[]): Promise<PredictionResult> {
         if (!this.model) {
             throw new Error('Model not initialized');
         }
@@ -183,12 +206,60 @@ export class TradingStrategy {
         const features = this.prepareFeatures(data.slice(-31, -1));
         const xs = tf.tensor3d([features[0]]);
         const prediction = this.model.predict(xs) as tf.Tensor;
-        const result = prediction.dataSync()[0];
+        const predictedPrice = prediction.dataSync()[0];
+        
+        // Calculate prediction confidence and trend
+        const currentPrice = data[data.length - 1].close;
+        const priceChange = (predictedPrice - currentPrice) / currentPrice;
+        const volatility = this.calculateVolatility(data);
+        
+        // Determine trend and confidence
+        const trend = priceChange > 0.02 ? 'bullish' : 
+                     priceChange < -0.02 ? 'bearish' : 
+                     'neutral';
+        
+        const confidence = Math.min(
+            Math.abs(priceChange) / volatility,
+            1
+        );
+
+        // Update daily returns for goal tracking
+        if (data.length >= 2) {
+            const dailyReturn = (data[data.length - 1].close - data[data.length - 2].close) / 
+                               data[data.length - 2].close;
+            this.recentDailyReturns.push(dailyReturn);
+            if (this.recentDailyReturns.length > 30) {
+                this.recentDailyReturns.shift();
+            }
+        }
         
         // Clean up tensors
         xs.dispose();
         prediction.dispose();
         
-        return result;
+        return {
+            predictedPrice,
+            confidence,
+            volatility,
+            trend
+        };
+    }
+
+    public getGoalProgress(currentValue: number): string {
+        const daysElapsed = Math.floor((Date.now() - this.startDate) / (1000 * 60 * 60 * 24));
+        const metrics = this.goalTracker.calculateProgress(
+            currentValue,
+            daysElapsed,
+            this.recentDailyReturns
+        );
+        return this.goalTracker.getProgressSummary(metrics);
+    }
+
+    public calculatePositionSize(currentValue: number, prediction: PredictionResult): number {
+        return this.goalTracker.suggestPositionSize(
+            currentValue,
+            prediction.volatility,
+            prediction.confidence
+        );
     }
 }
