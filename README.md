@@ -1,99 +1,88 @@
-# Wealthbot Docker Setup
 
-This repository contains Docker configurations for both development and production environments.
+# Wealthbot: Autonomous Trading dApp on Solana
 
-## Prerequisites
+## Objective
+Wealthbot aims to help users grow their equity autonomously by trading SOL perpetuals on the Drift Protocol within the Solana blockchain. The app uses agent-driven operations inspired by hedge fund strategies, targeting long-term compounded growth with a goal of reaching $1,000,000 in equity over 3-5 years.
 
-- Docker installed on your system
-- Docker Compose installed on your system
+## Core Features
 
-## Testing the Application
+### 1. User Access
+- Wallet-Based Login: Users access Wealthbot via their Phantom wallet with no additional sign-up requirements
+- Minimum Investment: Requires a $125 SOL balance to start, with a $100 minimum investment
 
-### Development Environment
+### 2. Autonomous Trading Engine
+The system employs multiple specialized agents working in concert:
 
-1. Start the development environment:
+- **Trading Agent**: Executes SOL perpetual trades on Drift Protocol
+- **Risk Management Agent**: Uses machine learning to dynamically manage risk exposure
+- **Strategy Agent**: Optimizes trading strategies using real-time data for compounded growth
+- **Research Agent**: Tracks SOL and Drift Protocol trends for strategy adjustments
+- **Backtesting Agent**: Validates strategies with historical data
+
+### 3. User Dashboard
+- Displays key metrics like profit/loss, daily compounded growth rate, open trades, and equity status
+- Real-Time Strategy Updates: Shows live adjustments while limiting notifications to critical updates
+
+### 4. Technical Stack
+
+#### Frontend
+- React.js with a modern UI
+- Integration with Phantom Wallet
+- Real-time data visualization
+
+#### Backend
+- Node.js, Python, and optional Rust for secure on-chain operations
+- Machine Learning: TensorFlow or PyTorch for real-time strategy and risk adjustments
+
+#### Development Platform
+- Built and deployed on Replit
+- Integrates Solana Web3.js and Drift Protocol SDK
+
+## Key Differentiator
+Wealthbot stands out for its agent-driven, hedge-fund-style trading strategy on a decentralized platform, targeting significant long-term equity growth for users with minimal intervention.
+
+## Installation and Setup
+
 ```bash
-docker-compose up frontend-dev --build
-```
-This will:
-- Build the development container
-- Start the development server on port 3001
-- Enable hot-reloading for development
-- Mount your local files into the container
+# Clone the repository
+git clone https://github.com/FastyFresh/wealthbot.git
 
-Access the development version at: http://localhost:3001
+# Install dependencies
+cd wealthbot/frontend
+npm install
 
-### Production Environment
-
-1. Start the production environment:
-```bash
-docker-compose up frontend-prod --build
-```
-This will:
-- Build an optimized production version
-- Serve it through Nginx on port 80
-- Use production-optimized settings
-
-Access the production version at: http://localhost:80
-
-## Docker Commands Reference
-
-### View Logs
-```bash
-# View development logs
-docker-compose logs frontend-dev
-
-# View production logs
-docker-compose logs frontend-prod
-```
-
-### Stop Services
-```bash
-# Stop all services
-docker-compose down
-
-# Stop specific service
-docker-compose stop frontend-dev
-docker-compose stop frontend-prod
+# Start the development server
+npm run dev
 ```
 
-### Rebuild Services
-```bash
-# Rebuild development
-docker-compose up frontend-dev --build
+## Architecture
 
-# Rebuild production
-docker-compose up frontend-prod --build
-```
+The system is built around several key agents:
 
-## Configuration
+1. **Trading Agent** (`src/agents/TradingAgent.ts`)
+   - Executes trades based on strategy signals
+   - Manages position sizing and entry/exit points
+   - Integrates with Drift Protocol
 
-- Development server runs on port 3001
-- Production server runs on port 80
-- Environment variables are configured in docker-compose.yml
-- Nginx configuration is located at frontend/nginx.conf
-- Development configuration is in frontend/Dockerfile.dev
-- Production configuration is in frontend/Dockerfile
+2. **Strategy Agent** (`src/agents/StrategyAgent.ts`)
+   - Implements trading strategies
+   - Manages strategy performance metrics
+   - Adapts to market conditions
 
-## Troubleshooting
+3. **Backtesting Agent** (`src/agents/BacktestingAgent.ts`)
+   - Simulates strategies on historical data
+   - Calculates performance metrics
+   - Validates strategy effectiveness
 
-If you encounter any issues:
+4. **Research Agent** (`src/agents/ResearchAgent.ts`)
+   - Analyzes market trends
+   - Processes market data and news
+   - Provides strategy recommendations
 
-1. Check the logs:
-```bash
-docker-compose logs frontend-dev
-# or
-docker-compose logs frontend-prod
-```
+## Contributing
 
-2. Rebuild the containers:
-```bash
-docker-compose down
-docker-compose up frontend-dev --build
-# or
-docker-compose up frontend-prod --build
-```
+Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
 
-3. Clean Docker cache:
-```bash
-docker system p
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
