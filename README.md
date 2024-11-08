@@ -4,6 +4,20 @@
 ## Objective
 Wealthbot aims to help users grow their equity autonomously by trading SOL perpetuals on the Drift Protocol within the Solana blockchain. The app uses agent-driven operations inspired by hedge fund strategies, targeting long-term compounded growth with a goal of reaching $1,000,000 in equity over 3-5 years.
 
+## How to Access the App
+
+1. Visit [app.wealthbot.io](https://app.wealthbot.io)
+2. Connect your Phantom Wallet (Install from [phantom.app](https://phantom.app) if you don't have it)
+3. Ensure you have minimum $125 SOL in your wallet (for gas fees)
+4. Click "Connect Wallet" and approve the connection
+5. Deposit minimum $100 SOL to start trading
+6. Click "Start" and let the autonomous system work
+
+That's it! The system will handle everything else automatically. You can:
+- Monitor your progress in the dashboard
+- Add more funds anytime to accelerate growth
+- View detailed analytics and performance metrics
+
 ## "Set It and Forget It" Philosophy
 Wealthbot is designed for complete automation with minimal user intervention:
 1. Connect your Phantom wallet (minimum $125 SOL balance for gas fees)
@@ -54,7 +68,7 @@ The system employs multiple specialized agents working in concert:
 ## Key Differentiator
 Wealthbot stands out as a true "set it and forget it" trading solution on a decentralized platform. Users simply deposit funds and let the autonomous system work toward the goal of significant equity growth, with the flexibility to accelerate growth through additional deposits at any time.
 
-## Installation and Setup
+## Development Setup
 
 ```bash
 # Clone the repository
