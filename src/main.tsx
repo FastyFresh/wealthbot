@@ -1,10 +1,20 @@
+
 import './utils/init-polyfills';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { WalletProvider } from './providers/WalletProvider';
+import { DriftProvider } from './providers/DriftProvider';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import './index.css';
+
+// Initialize Buffer for web3
+import { Buffer } from 'buffer';
+window.Buffer = Buffer;
+
+// Initialize process for web3
+import process from 'process';
+window.process = process;
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -16,13 +26,38 @@ try {
     <React.StrictMode>
       <ErrorBoundary>
         <WalletProvider>
-          <App />
+          <DriftProvider>
+            <App />
+          </DriftProvider>
         </WalletProvider>
       </ErrorBoundary>
     </React.StrictMode>
   );
 
-  console.log('Application initialized successfully');
+  // Initialize application monitoring
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  if (isDevelopment) {
+    console.log('Application initialized in development mode');
+    console.log('Available at:', window.location.href);
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Polyfills initialized:', {
+      hasBuffer: typeof window.Buffer !== 'undefined',
+      hasProcess: typeof window.process !== 'undefined',
+      hasPhantom: typeof window.solana !== 'undefined' && window.solana.isPhantom
+    });
+
+    // Add development-specific error handling
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled Promise Rejection:', event.reason);
+    });
+
+    // Monitor React rendering
+    const startTime = performance.now();
+    window.addEventListener('load', () => {
+      const loadTime = performance.now() - startTime;
+      console.log(`Initial render completed in ${loadTime.toFixed(2)}ms`);
+    });
+  }
 } catch (error) {
   console.error('Failed to initialize application:', error);
   

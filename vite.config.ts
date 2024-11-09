@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -10,19 +11,25 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'stream': 'stream-browserify',
+      'crypto': 'crypto-browserify',
+      'util': 'util',
       'buffer': 'buffer',
       'process': 'process/browser',
-      'stream': 'stream-browserify',
-      'util': 'util',
-      'crypto': 'crypto-browserify'
     }
   },
   define: {
-    'process.env': {},
-    'global': 'globalThis',
-    'Buffer': ['buffer', 'Buffer']
+    'process.env': process.env,
+    global: 'globalThis',
+    'process.env.NODE_DEBUG': JSON.stringify(''),
+    Buffer: ['buffer', 'Buffer'],
   },
   optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis'
+      }
+    },
     include: [
       'buffer',
       'process',
@@ -30,13 +37,12 @@ export default defineConfig({
       'stream-browserify',
       'crypto-browserify',
       '@tensorflow/tfjs',
-      'technicalindicators'
-    ],
-    esbuildOptions: {
-      define: {
-        global: 'globalThis'
-      }
-    }
+      'technicalindicators',
+      '@solana/web3.js',
+      '@drift-labs/sdk',
+      '@project-serum/anchor',
+      'lightweight-charts'
+    ]
   },
   server: {
     port: BASE_PORT,
@@ -52,6 +58,11 @@ export default defineConfig({
     }
   },
   build: {
+    target: 'esnext',
+    sourcemap: true,
+    commonjsOptions: {
+      transformMixedEsModules: true
+    },
     rollupOptions: {
       external: [
         'socks-proxy-agent',
@@ -59,16 +70,8 @@ export default defineConfig({
         'https',
         'net',
         'tls',
-        'crypto',
-        'stream',
-        'zlib',
-        'util',
-        'buffer'
+        'zlib'
       ]
-    },
-    sourcemap: true,
-    commonjsOptions: {
-      transformMixedEsModules: true
     }
   }
 });

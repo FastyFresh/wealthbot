@@ -1,3 +1,4 @@
+
 declare module 'stream-browserify' {
     const content: any;
     export = content;
@@ -53,4 +54,68 @@ declare module 'process' {
         platform: string;
     };
     export = process;
+}
+
+interface Window {
+    solana?: {
+        isPhantom?: boolean;
+        connect: () => Promise<{ publicKey: { toString: () => string } }>;
+        disconnect: () => Promise<void>;
+        signTransaction: <T>(transaction: T) => Promise<T>;
+        signAllTransactions: <T>(transactions: T[]) => Promise<T[]>;
+        request: (params: { method: string; params: any }) => Promise<any>;
+        on: (event: string, callback: (args: any) => void) => void;
+        off: (event: string, callback: (args: any) => void) => void;
+        publicKey?: { toString(): string };
+    };
+    Buffer: typeof Buffer;
+    process: typeof process;
+}
+
+declare module 'lightweight-charts' {
+    export * from 'lightweight-charts';
+}
+
+declare module '@tensorflow/tfjs' {
+    export * from '@tensorflow/tfjs';
+}
+
+declare module 'technicalindicators' {
+    export * from 'technicalindicators';
+}
+
+declare module '@drift-labs/sdk' {
+    export * from '@drift-labs/sdk';
+}
+
+declare module '@project-serum/anchor' {
+    export * from '@project-serum/anchor';
+}
+
+declare module '@solana/web3.js' {
+    export * from '@solana/web3.js';
+}
+
+declare module '@solana/spl-token' {
+    export * from '@solana/spl-token';
+}
+
+declare module '*.svg' {
+    const content: any;
+    export default content;
+}
+
+declare module '*.png' {
+    const content: any;
+    export default content;
+}
+
+declare module '*.jpg' {
+    const content: any;
+    export default content;
+}
+
+declare module '*.json' {
+    const content: any;
+    export default content;
 }

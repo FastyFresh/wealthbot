@@ -1,17 +1,19 @@
+
 import React from 'react';
 import './App.css';
-import { FinancialDashboard } from './components/dashboard/FinancialDashboard';
+import { TradingDashboard } from './components/trading/TradingDashboard';
 import { WalletConnect } from './components/wallet/WalletConnect';
 import { useWallet } from './providers/WalletProvider';
+import { theme } from './config/theme';
 
 const App: React.FC = () => {
   const { connected, isLoading } = useWallet();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen" style={{ background: theme.colors.primary.background }}>
+      <header className="border-b border-slate-700" style={{ background: theme.colors.primary.surface }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold" style={{ color: theme.colors.text.primary }}>
             WealthBot Trading Platform
           </h1>
           <div className="flex items-center space-x-4">
@@ -23,46 +25,46 @@ const App: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isLoading ? (
           <div className="flex justify-center items-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
           </div>
         ) : connected ? (
-          <FinancialDashboard />
+          <TradingDashboard />
         ) : (
           <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: theme.colors.text.primary }}>
               Welcome to WealthBot Trading Platform
             </h2>
-            <p className="text-gray-600 mb-8">
+            <p className="mb-8" style={{ color: theme.colors.text.secondary }}>
               Connect your Phantom wallet to start trading with AI-powered algorithms
             </p>
-            <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="rounded-lg p-6 max-w-2xl mx-auto" style={{ background: theme.colors.primary.surface }}>
+              <h3 className="text-lg font-medium mb-4" style={{ color: theme.colors.text.primary }}>
                 Getting Started
               </h3>
-              <ul className="text-left space-y-4 text-gray-600">
+              <ul className="text-left space-y-4" style={{ color: theme.colors.text.secondary }}>
                 <li className="flex items-start">
-                  <span className="flex-shrink-0 h-6 w-6 text-blue-600 mr-2">
+                  <span className="flex-shrink-0 h-6 w-6 mr-2" style={{ color: theme.colors.primary.accent }}>
                     1.
                   </span>
                   Install Phantom Wallet from the Chrome Web Store if you haven't already
                 </li>
                 <li className="flex items-start">
-                  <span className="flex-shrink-0 h-6 w-6 text-blue-600 mr-2">
+                  <span className="flex-shrink-0 h-6 w-6 mr-2" style={{ color: theme.colors.primary.accent }}>
                     2.
                   </span>
                   Click the "Connect Wallet" button in the top right corner
                 </li>
                 <li className="flex items-start">
-                  <span className="flex-shrink-0 h-6 w-6 text-blue-600 mr-2">
+                  <span className="flex-shrink-0 h-6 w-6 mr-2" style={{ color: theme.colors.primary.accent }}>
                     3.
                   </span>
-                  Fund your wallet with devnet SOL to start trading
+                  Fund your wallet with devnet SOL (minimum 0.1 SOL)
                 </li>
                 <li className="flex items-start">
-                  <span className="flex-shrink-0 h-6 w-6 text-blue-600 mr-2">
+                  <span className="flex-shrink-0 h-6 w-6 mr-2" style={{ color: theme.colors.primary.accent }}>
                     4.
                   </span>
-                  Access advanced trading features powered by AI algorithms
+                  Start trading with AI-powered algorithms
                 </li>
               </ul>
             </div>
@@ -70,10 +72,10 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="bg-white mt-auto">
+      <footer style={{ background: theme.colors.primary.surface }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="border-t border-gray-200 pt-4">
-            <p className="text-center text-sm text-gray-500">
+          <div className="border-t border-slate-700 pt-4">
+            <p className="text-center text-sm" style={{ color: theme.colors.text.muted }}>
               Powered by AI Trading Algorithms - {new Date().getFullYear()}
             </p>
           </div>
