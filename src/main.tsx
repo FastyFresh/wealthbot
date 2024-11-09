@@ -16,6 +16,9 @@ window.Buffer = Buffer;
 import process from 'process';
 window.process = process;
 
+// Initialize global for web3
+window.global = window;
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error('Failed to find root element');
@@ -43,7 +46,7 @@ try {
     console.log('Polyfills initialized:', {
       hasBuffer: typeof window.Buffer !== 'undefined',
       hasProcess: typeof window.process !== 'undefined',
-      hasPhantom: typeof window.solana !== 'undefined' && window.solana.isPhantom
+      hasGlobal: typeof window.global !== 'undefined'
     });
 
     // Add development-specific error handling
