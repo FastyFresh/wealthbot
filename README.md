@@ -1,115 +1,150 @@
-
 # Wealthbot: Autonomous Trading dApp on Solana
+
+A sophisticated trading dashboard built with React, Solana, and the Drift Protocol. This platform provides a professional trading experience with real-time market data, advanced charting, and AI-powered trading capabilities.
 
 ## Objective
 Wealthbot aims to help users grow their equity autonomously by trading SOL perpetuals on the Drift Protocol within the Solana blockchain. The app uses agent-driven operations inspired by hedge fund strategies, targeting long-term compounded growth with a goal of reaching $1,000,000 in equity over 3-5 years.
 
-## How to Access the App
-
-1. Visit [app.wealthbot.io](https://app.wealthbot.io)
-2. Connect your Phantom Wallet (Install from [phantom.app](https://phantom.app) if you don't have it)
-3. Ensure you have minimum $125 SOL in your wallet (for gas fees)
-4. Click "Connect Wallet" and approve the connection
-5. Deposit minimum $100 SOL to start trading
-6. Click "Start" and let the autonomous system work
-
-That's it! The system will handle everything else automatically. You can:
-- Monitor your progress in the dashboard
-- Add more funds anytime to accelerate growth
-- View detailed analytics and performance metrics
-
-## "Set It and Forget It" Philosophy
-Wealthbot is designed for complete automation with minimal user intervention:
-1. Connect your Phantom wallet (minimum $125 SOL balance for gas fees)
-2. Deposit minimum $100 SOL to start trading
-3. Click "Start" and let the autonomous system handle everything
-4. Optionally deposit more funds anytime to accelerate growth
-5. Monitor your progress through the dashboard
-
 ## Core Features
 
-### 1. User Access
-- Simple One-Click Start: Connect wallet, deposit, and click start
-- Wallet-Based Login: Users access Wealthbot via their Phantom wallet with no additional sign-up requirements
-- Minimum Requirements:
-  - $125 SOL in Phantom wallet (includes buffer for gas fees)
-  - $100 SOL minimum initial deposit for trading
-  - Additional deposits accepted anytime to accelerate growth
+### 1. Professional Trading Interface
+- 📊 Advanced charting with TradingView integration
+- 📈 Real-time order book and market depth
+- 💼 Position management and tracking
+- 🎯 Market, limit, and stop orders
 
 ### 2. Autonomous Trading Engine
 The system employs multiple specialized agents working in concert:
 
 - **Trading Agent**: Executes SOL perpetual trades on Drift Protocol
 - **Risk Management Agent**: Uses machine learning to dynamically manage risk exposure
-- **Strategy Agent**: Optimizes trading strategies using real-time data for compounded growth
-- **Research Agent**: Tracks SOL and Drift Protocol trends for strategy adjustments
+- **Strategy Agent**: Optimizes trading strategies using real-time data
+- **Research Agent**: Tracks SOL and Drift Protocol trends
 - **Backtesting Agent**: Validates strategies with historical data
 
-### 3. User Dashboard
-- Displays key metrics like profit/loss, daily compounded growth rate, open trades, and equity status
-- Real-Time Strategy Updates: Shows live adjustments while limiting notifications to critical updates
-- Simple deposit interface to add funds when desired
+### 3. Secure Wallet Integration
+- 🔐 Phantom wallet support with secure transaction handling
+- 💫 Solana devnet and mainnet compatibility
+- 🔑 Multi-signature support for enhanced security
+- 💰 Simple deposit and withdrawal process
 
-### 4. Technical Stack
+### 4. Modern UI/UX
+- 🌙 Dark mode optimized for trading
+- 📱 Fully responsive design
+- 🎨 Clean, professional interface
+- 🎯 Intuitive trading controls
 
-#### Frontend
-- React.js with a modern UI
-- Integration with Phantom Wallet
-- Real-time data visualization
+## Tech Stack
 
-#### Backend
-- Node.js, Python, and optional Rust for secure on-chain operations
-- Machine Learning: TensorFlow or PyTorch for real-time strategy and risk adjustments
+### Frontend
+- React 18.3 with TypeScript
+- Vite 5.4 for fast development
+- Tailwind CSS for styling
+- Lightweight Charts for technical analysis
 
-#### Development Platform
-- Built and deployed on Replit
-- Integrates Solana Web3.js and Drift Protocol SDK
+### Blockchain
+- Solana Web3.js
+- Drift Protocol SDK
+- Phantom Wallet integration
 
-## Key Differentiator
-Wealthbot stands out as a true "set it and forget it" trading solution on a decentralized platform. Users simply deposit funds and let the autonomous system work toward the goal of significant equity growth, with the flexibility to accelerate growth through additional deposits at any time.
+### Development
+- Node.js 20+
+- Docker support
+- ESLint and TypeScript for code quality
+- Vitest for testing
 
-## Development Setup
+## Getting Started
 
+### Prerequisites
+- Node.js 20+
+- Phantom Wallet browser extension
+- Git
+
+### Installation
+
+1. Clone the repository:
 ```bash
-# Clone the repository
-git clone https://github.com/FastyFresh/wealthbot.git
+git clone https://github.com/yourusername/wealthbot.git
+cd wealthbot
+```
 
-# Install dependencies
-cd wealthbot/frontend
+2. Install dependencies:
+```bash
+cd frontend
 npm install
+```
 
-# Start the development server
+3. Create environment file:
+```bash
+cp .env.example .env
+```
+
+4. Start development server:
+```bash
 npm run dev
 ```
 
-## Architecture
+The application will be available at `http://localhost:8080`
 
-The system is built around several key agents:
+## Project Structure
 
-1. **Trading Agent** (`src/agents/TradingAgent.ts`)
-   - Executes trades based on strategy signals
-   - Manages position sizing and entry/exit points
-   - Integrates with Drift Protocol
+```
+src/
+├── agents/            # Trading and research agents
+├── components/        # React components
+│   ├── common/       # Shared components
+│   ├── trading/      # Trading-specific components
+│   └── wallet/       # Wallet integration components
+├── providers/        # Context providers
+├── services/        # Business logic and API integration
+├── config/          # Configuration files
+├── types/          # TypeScript type definitions
+└── utils/          # Utility functions
+```
 
-2. **Strategy Agent** (`src/agents/StrategyAgent.ts`)
-   - Implements trading strategies
-   - Manages strategy performance metrics
-   - Adapts to market conditions
+## Available Scripts
 
-3. **Backtesting Agent** (`src/agents/BacktestingAgent.ts`)
-   - Simulates strategies on historical data
-   - Calculates performance metrics
-   - Validates strategy effectiveness
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+- `npm run test` - Run tests
 
-4. **Research Agent** (`src/agents/ResearchAgent.ts`)
-   - Analyzes market trends
-   - Processes market data and news
-   - Provides strategy recommendations
+## Docker Support
+
+Development:
+```bash
+docker-compose up frontend-dev
+```
+
+Production:
+```bash
+docker-compose up frontend
+```
 
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Security
+
+This project is currently in development. Use on mainnet at your own risk.
+
+## Support
+
+For support, please open an issue in the GitHub repository.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [Drift Protocol](https://www.drift.trade/) for the trading infrastructure
+- [Solana](https://solana.com/) for the blockchain platform
+- [Phantom](https://phantom.app/) for the wallet integration
+- [TradingView](https://www.tradingview.com/) for charting libraries
