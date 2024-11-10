@@ -1,14 +1,12 @@
 # Wealthbot: Autonomous Trading dApp on Solana
 
-A sophisticated trading dashboard built with React, Solana, and the Drift Protocol. This platform provides a professional trading experience with real-time market data, advanced charting, and AI-powered trading capabilities.
-
 ## Objective
 Wealthbot aims to help users grow their equity autonomously by trading SOL perpetuals on the Drift Protocol within the Solana blockchain. The app uses agent-driven operations inspired by hedge fund strategies, targeting long-term compounded growth with a goal of reaching $1,000,000 in equity over 3-5 years.
 
 ## Core Features
 
 ### 1. Professional Trading Interface
-- 📊 Advanced charting with TradingView integration
+- 📊 Advanced charting with Lightweight Charts
 - 📈 Real-time order book and market depth
 - 💼 Position management and tracking
 - 🎯 Market, limit, and stop orders
@@ -18,14 +16,14 @@ The system employs multiple specialized agents working in concert:
 
 - **Trading Agent**: Executes SOL perpetual trades on Drift Protocol
 - **Risk Management Agent**: Uses machine learning to dynamically manage risk exposure
-- **Strategy Agent**: Optimizes trading strategies using real-time data
-- **Research Agent**: Tracks SOL and Drift Protocol trends
+- **Strategy Agent**: Optimizes trading strategies using real-time data for compounded growth
+- **Research Agent**: Tracks SOL and Drift Protocol trends for strategy adjustments
 - **Backtesting Agent**: Validates strategies with historical data
 
 ### 3. Secure Wallet Integration
-- 🔐 Phantom wallet support with secure transaction handling
-- 💫 Solana devnet and mainnet compatibility
-- 🔑 Multi-signature support for enhanced security
+- 🔐 Phantom wallet support
+- 💫 Devnet and mainnet compatibility
+- 🔑 Secure transaction handling
 - 💰 Simple deposit and withdrawal process
 
 ### 4. Modern UI/UX
@@ -46,12 +44,7 @@ The system employs multiple specialized agents working in concert:
 - Solana Web3.js
 - Drift Protocol SDK
 - Phantom Wallet integration
-
-### Development
-- Node.js 20+
-- Docker support
-- ESLint and TypeScript for code quality
-- Vitest for testing
+- Anchor Framework
 
 ## Getting Started
 
@@ -64,13 +57,12 @@ The system employs multiple specialized agents working in concert:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/wealthbot.git
-cd wealthbot
+git clone https://github.com/FastyFresh/wealthbot.git
+cd wealthbot/frontend
 ```
 
 2. Install dependencies:
 ```bash
-cd frontend
 npm install
 ```
 
@@ -85,6 +77,13 @@ npm run dev
 ```
 
 The application will be available at `http://localhost:8080`
+
+## Development Setup
+
+1. Install Phantom Wallet from the Chrome Web Store
+2. Switch to Solana Devnet
+3. Get some devnet SOL (you can use the airdrop feature)
+4. Connect your wallet to the application
 
 ## Project Structure
 
@@ -132,7 +131,7 @@ docker-compose up frontend
 
 ## Security
 
-This project is currently in development. Use on mainnet at your own risk.
+This project is currently in development and not ready for production use. Use on mainnet at your own risk.
 
 ## Support
 
@@ -147,4 +146,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Drift Protocol](https://www.drift.trade/) for the trading infrastructure
 - [Solana](https://solana.com/) for the blockchain platform
 - [Phantom](https://phantom.app/) for the wallet integration
-- [TradingView](https://www.tradingview.com/) for charting libraries
+- [Lightweight Charts](https://www.tradingview.com/lightweight-charts/) for charting library
