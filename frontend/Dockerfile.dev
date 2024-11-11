@@ -1,17 +1,42 @@
-# Development stage
-FROM node:20-alpine
+FROM node:20-bullseye-slim
 
 WORKDIR /app
 
-# Install dependencies
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    gcc \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
 COPY package*.json ./
-RUN npm install
+
+# Clear existing modules and install dependencies with specific flags
+RUN npm cache clean --force && \
+    rm -rf node_modules package-lock.json && \
+    npm install --force \
+    --prefer-offline \
+    --no-optional \
+    --no-package-lock \
+    --ignore-scripts
+
+# Explicitly install rollup with specific settings
+RUN npm install rollup@latest --force \
+    --no-optional \
+    --ignore-scripts
 
 # Copy source code
 COPY . .
+
+# Set environment variables
+ENV ROLLUP_DISABLE_NATIVE=true
+ENV NODE_ENV=development
 
 # Expose development port
 EXPOSE 3001
 
 # Start development server
-CMD npm run dev -- --host --port 3001
+CMD ["npm", "run", "dev", "--", "--host", "--port", "3001"]
