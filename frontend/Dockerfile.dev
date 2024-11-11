@@ -1,42 +1,33 @@
-FROM node:20-bullseye-slim
+FROM node:18-bullseye-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies
+# Install only the necessary build dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
-    gcc \
-    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
 
-# Clear existing modules and install dependencies with specific flags
-RUN npm cache clean --force && \
-    rm -rf node_modules package-lock.json && \
-    npm install --force \
-    --prefer-offline \
-    --no-optional \
-    --no-package-lock \
-    --ignore-scripts
+# Install dependencies
+RUN npm config set legacy-peer-deps true && \
+    npm install --legacy-peer-deps && \
+    npm install -D vite@latest && \
+    npm install -g vite
 
-# Explicitly install rollup with specific settings
-RUN npm install rollup@latest --force \
-    --no-optional \
-    --ignore-scripts
+# Add node_modules/.bin to PATH
+ENV PATH /app/node_modules/.bin:$PATH
 
-# Copy source code
+# Copy source files
 COPY . .
 
-# Set environment variables
-ENV ROLLUP_DISABLE_NATIVE=true
 ENV NODE_ENV=development
+ENV VITE_SOLANA_NETWORK=devnet
+ENV VITE_USE_SSL=false
 
-# Expose development port
 EXPOSE 3001
 
-# Start development server
-CMD ["npm", "run", "dev", "--", "--host", "--port", "3001"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3001"]

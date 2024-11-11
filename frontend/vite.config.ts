@@ -6,41 +6,21 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      'socks-proxy-agent': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      'http': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      'https': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      'net': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      'tls': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      'crypto': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      'stream': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      'zlib': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      'util': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      'buffer': path.resolve(__dirname, './src/utils/polyfills.ts'),
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src')
     }
-  },
-  define: {
-    'process.env': {},
-    global: 'globalThis',
   },
   server: {
     port: 3001,
-    host: true,
-    cors: true,
+    host: true
+  },
+  optimizeDeps: {
+    exclude: ['@rollup/rollup-linux-x64-gnu', '@rollup/rollup-linux-x64-musl']
   },
   build: {
     rollupOptions: {
       external: [
-        'socks-proxy-agent',
-        'http',
-        'https',
-        'net',
-        'tls',
-        'crypto',
-        'stream',
-        'zlib',
-        'util',
-        'buffer'
+        '@rollup/rollup-linux-x64-gnu',
+        '@rollup/rollup-linux-x64-musl'
       ]
     }
   }

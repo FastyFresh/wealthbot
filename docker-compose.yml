@@ -1,45 +1,26 @@
+version: '3.8'
+
 services:
-  frontend-dev:
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /app/.vite
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8080
-      - ROLLUP_DISABLE_NATIVE=true
-    command: npm run dev -- --host --port 3001
-    networks:
-      - wealthbot-network
+      - VITE_SOLANA_NETWORK=devnet
+      - VITE_USE_SSL=true
+      - SSL_CRT_FILE=/app/certificates/cert.pem
+      - SSL_KEY_FILE=/app/certificates/key.pem
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3001"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3001"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
-
-  frontend-prod:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-    environment:
-      - NODE_ENV=production
-      - VITE_API_URL=http://api.wealthbot.com
-    networks:
-      - wealthbot-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:80"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001"]
       interval: 30s
       timeout: 10s
       retries: 3
-    restart: unless-stopped
-
-networks:
-  wealthbot-network:
-    driver: bridge
+      start_period: 10s
