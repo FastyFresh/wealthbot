@@ -1,42 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-@layer base {
-  html {
-    @apply antialiased;
-  }
-  body {
-    @apply bg-gray-50 text-gray-900;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-200;
-  }
-  
-  .btn-secondary {
-    @apply px-4 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition-colors duration-200;
-  }
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
 
-  .card {
-    @apply bg-white rounded-xl shadow-md p-6;
-  }
+.animate-fade-in-delay {
+  animation: fadeIn 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+}
 
-  .input-field {
-    @apply block w-full rounded-md border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500;
-  }
-
-  .instructions {
-    @apply bg-white p-6 rounded-lg shadow-md text-green-600 my-4;
-  }
-
-  .instruction-step {
-    @apply mb-2 text-lg font-medium;
-  }
-
-  .instruction-code {
-    @apply bg-gray-50 p-2 rounded font-mono text-green-700 block my-2;
-  }
+.animate-fade-in-delay-2 {
+  animation: fadeIn 0.6s ease-out 0.4s forwards;
+  opacity: 0;
 }
