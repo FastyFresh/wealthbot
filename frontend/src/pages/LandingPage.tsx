@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
@@ -8,6 +7,112 @@ const ANIMATIONS = {
   fadeIn: 'animate-fade-in',
   fadeInDelay: 'animate-fade-in-delay',
   fadeInDelay2: 'animate-fade-in-delay-2'
+};
+
+interface AnimatedFeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: string;
+}
+
+const AnimatedFeatureCard: React.FC<AnimatedFeatureCardProps> = ({ icon, title, description, color }) => {
+  return (
+    <div className="group bg-[#1E293B] p-8 rounded-xl transform transition-all duration-300 hover:scale-[1.02] 
+                    hover:shadow-lg hover:shadow-[#38BDF8]/10 hover:border-[#38BDF8]/20 border border-transparent">
+      <div className={`bg-[#${color}]/20 w-12 h-12 rounded-lg flex items-center justify-center mb-6 
+                    group-hover:scale-110 transition-transform duration-300
+                    group-hover:shadow-[0_0_20px_rgba(${parseInt(color.substring(0,2),16)},${parseInt(color.substring(2,4),16)},${parseInt(color.substring(4,6),16)},0.3)]`}>
+        {icon}
+      </div>
+      <h4 className="text-xl font-semibold mb-4 transition-colors duration-300 group-hover:text-[#38BDF8]">{title}</h4>
+      <p className="text-gray-400 transition-colors duration-300 group-hover:text-gray-300">{description}</p>
+    </div>
+  );
+};
+
+interface NavbarProps {
+  isScrolled: boolean;
+  isMobileMenuOpen: boolean;
+  setIsMobileMenuOpen: (value: boolean) => void;
+  scrollToSection: (sectionId: string) => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ isScrolled, isMobileMenuOpen, setIsMobileMenuOpen, scrollToSection }) => {
+  return (
+    <nav className={`fixed w-full z-50 transition-all duration-300 ${
+      isScrolled ? 'bg-[#0B1221]/95 backdrop-blur-sm shadow-lg' : 'bg-transparent'
+    }`}>
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-[#38BDF8] to-[#818CF8] bg-clip-text text-transparent">
+            Wealthbot
+          </h1>
+          
+          <div className="hidden md:flex items-center space-x-8">
+            <button onClick={() => scrollToSection('features')} 
+                    className="text-gray-300 hover:text-[#38BDF8] transition-colors duration-300 hover:scale-105 transform">
+              Features
+            </button>
+            <button onClick={() => scrollToSection('how-it-works')} 
+                    className="text-gray-300 hover:text-[#38BDF8] transition-colors duration-300 hover:scale-105 transform">
+              How It Works
+            </button>
+            <WalletMultiButton className="!bg-[#38BDF8] hover:!bg-[#38BDF8]/80 !transition-all !duration-300 
+                                        hover:!shadow-lg hover:!shadow-[#38BDF8]/20 hover:!translate-y-[-2px]" />
+          </div>
+
+          <div className="md:hidden flex items-center">
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                    className="text-gray-300 hover:text-[#38BDF8] transition-colors duration-300">
+              {isMobileMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
+        </div>
+
+        <div className={`md:hidden transition-all duration-300 ${
+          isMobileMenuOpen ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+        } overflow-hidden`}>
+          <div className="py-4 space-y-4">
+            <button onClick={() => scrollToSection('features')} 
+                    className="block w-full text-left text-gray-300 hover:text-[#38BDF8] transition-colors duration-300">
+              Features
+            </button>
+            <button onClick={() => scrollToSection('how-it-works')} 
+                    className="block w-full text-left text-gray-300 hover:text-[#38BDF8] transition-colors duration-300">
+              How It Works
+            </button>
+            <div className="pt-2">
+              <WalletMultiButton className="!bg-[#38BDF8] hover:!bg-[#38BDF8]/80 !transition-all !duration-300 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+interface PrimaryButtonProps {
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}
+
+const PrimaryButton: React.FC<PrimaryButtonProps> = ({ onClick, disabled, children }) => {
+  return (
+    <button 
+      onClick={onClick}
+      disabled={disabled}
+      className="group px-8 py-3 bg-[#38BDF8] rounded-lg font-semibold 
+                flex items-center justify-center hover:bg-[#38BDF8]/90 
+                transition-all duration-300 transform hover:scale-105
+                hover:shadow-lg hover:shadow-[#38BDF8]/20 
+                hover:translate-y-[-2px] active:translate-y-[0px]
+                disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {children}
+    </button>
+  );
 };
 
 const FEATURES = [
@@ -83,53 +188,12 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#0B1221] text-white overflow-x-hidden">
-      {/* Navigation */}
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-[#0B1221]/95 backdrop-blur-sm shadow-lg' : 'bg-transparent'
-      }`}>
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-[#38BDF8] to-[#818CF8] bg-clip-text text-transparent">
-              Wealthbot
-            </h1>
-            
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => scrollToSection('features')} className="text-gray-300 hover:text-[#38BDF8] transition-colors">
-                Features
-              </button>
-              <button onClick={() => scrollToSection('how-it-works')} className="text-gray-300 hover:text-[#38BDF8] transition-colors">
-                How It Works
-              </button>
-              <WalletMultiButton className="!bg-[#38BDF8] hover:!bg-[#38BDF8]/80 !transition-all !duration-300" />
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center">
-              <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-300">
-                {isMobileMenuOpen ? <X /> : <Menu />}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          <div className={`md:hidden transition-all duration-300 ${
-            isMobileMenuOpen ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
-          } overflow-hidden`}>
-            <div className="py-4 space-y-4">
-              <button onClick={() => scrollToSection('features')} className="block w-full text-left text-gray-300 hover:text-[#38BDF8] transition-colors">
-                Features
-              </button>
-              <button onClick={() => scrollToSection('how-it-works')} className="block w-full text-left text-gray-300 hover:text-[#38BDF8] transition-colors">
-                How It Works
-              </button>
-              <div className="pt-2">
-                <WalletMultiButton className="!bg-[#38BDF8] hover:!bg-[#38BDF8]/80 !transition-all !duration-300 w-full" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar 
+        isScrolled={isScrolled}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        scrollToSection={scrollToSection}
+      />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20">
@@ -142,24 +206,17 @@ export default function LandingPage() {
               Let our AI-powered trading system help you reach your $1,000,000 goal through sophisticated algorithmic trading on the Solana blockchain.
             </p>
             <div className={`flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 ${ANIMATIONS.fadeInDelay2}`}>
-              <button 
-                onClick={handleGetStarted}
-                disabled={isLoading}
-                className="group px-8 py-3 bg-[#38BDF8] rounded-lg font-semibold flex items-center justify-center
-                         hover:bg-[#38BDF8]/90 transition-all duration-300 transform hover:scale-105
-                         hover:shadow-[0_0_20px_rgba(56,189,248,0.3)] relative overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center">
-                  {isLoading ? 'Connecting...' : (
-                    <>
-                      Get Started <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-[#38BDF8] to-[#818CF8] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </button>
-              <button className="px-8 py-3 bg-[#1E293B] rounded-lg font-semibold hover:bg-[#1E293B]/90 
-                               transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+              <PrimaryButton onClick={handleGetStarted} disabled={isLoading}>
+                {isLoading ? 'Connecting...' : (
+                  <>
+                    Get Started <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </PrimaryButton>
+              <button className="px-8 py-3 bg-[#1E293B] rounded-lg font-semibold 
+                               hover:bg-[#1E293B]/90 transition-all duration-300 
+                               transform hover:scale-105 hover:shadow-lg
+                               hover:translate-y-[-2px] active:translate-y-[0px]">
                 Learn More
               </button>
             </div>
@@ -174,18 +231,13 @@ export default function LandingPage() {
           <h3 className="text-3xl font-bold text-center mb-16">Key Features</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             {FEATURES.map((feature, index) => (
-              <div key={index} className="group bg-[#1E293B] p-8 rounded-xl transform hover:scale-[1.02] 
-                                       transition-all duration-300 hover:shadow-xl relative overflow-hidden">
-                <div className={`absolute inset-0 bg-gradient-to-br from-[#${feature.color}]/10 to-transparent 
-                               opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-                <div className={`bg-[#${feature.color}]/20 w-12 h-12 rounded-lg flex items-center justify-center mb-6 
-                               group-hover:shadow-[0_0_20px_rgba(${parseInt(feature.color.substring(0,2),16)},${parseInt(feature.color.substring(2,4),16)},${parseInt(feature.color.substring(4,6),16)},0.3)]
-                               transition-all duration-300`}>
-                  {feature.icon}
-                </div>
-                <h4 className="text-xl font-semibold mb-4">{feature.title}</h4>
-                <p className="text-gray-400">{feature.description}</p>
-              </div>
+              <AnimatedFeatureCard
+                key={index}
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                color={feature.color}
+              />
             ))}
           </div>
         </div>
