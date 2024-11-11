@@ -1,75 +1,44 @@
 
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './src/**/*.{js,jsx,ts,tsx}',
+    './index.html',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         primary: {
-          background: '#0F172A',    // Dark blue base
-          surface: '#1E293B',       // Lighter blue surface
-          accent: '#38BDF8'         // Bright blue accent
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
         },
-        trading: {
-          profit: '#22C55E',        // Green
-          loss: '#EF4444',          // Red
-          neutral: '#94A3B8'        // Gray
+        secondary: {
+          50: '#fdf4ff',
+          100: '#fae8ff',
+          200: '#f5d0fe',
+          300: '#f0abfc',
+          400: '#e879f9',
+          500: '#d946ef',
+          600: '#c026d3',
+          700: '#a21caf',
+          800: '#86198f',
+          900: '#701a75',
         },
-        text: {
-          primary: '#F8FAFC',       // Almost white
-          secondary: '#CBD5E1',     // Light gray
-          muted: '#64748B'          // Muted blue-gray
-        }
       },
       fontFamily: {
-        sans: ['Inter var', 'system-ui', '-apple-system', 'sans-serif'],
-      },
-      spacing: {
-        '72': '18rem',
-        '84': '21rem',
-        '96': '24rem',
-      },
-      maxWidth: {
-        '8xl': '88rem',
-        '9xl': '96rem',
-      },
-      borderRadius: {
-        '4xl': '2rem',
-      },
-      animation: {
-        'spin-slow': 'spin 3s linear infinite',
-        'bounce-slow': 'bounce 3s infinite',
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      },
-      transitionProperty: {
-        'height': 'height',
-        'spacing': 'margin, padding',
-      },
-      zIndex: {
-        '60': '60',
-        '70': '70',
-        '80': '80',
-        '90': '90',
-        '100': '100',
-      },
-      screens: {
-        '3xl': '1920px',
-      },
-      boxShadow: {
-        'glow': '0 0 15px rgba(56, 189, 248, 0.5)',
-      },
-      backdropBlur: {
-        xs: '2px',
+        sans: ['Inter var', 'sans-serif'],
       },
     },
   },
   plugins: [
-    require('@tailwindcss/forms')({
-      strategy: 'class',
-    }),
+    require('@tailwindcss/forms'),
   ],
 }

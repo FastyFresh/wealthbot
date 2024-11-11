@@ -1,12 +1,7 @@
-
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { TradingStrategy } from '../../services/TradingStrategy';
 import { ErrorBoundary } from '../common/ErrorBoundary';
-import { TradingChart } from './TradingChart';
-import { OrderBook } from './OrderBook';
-import { TradingControls } from './TradingControls';
-import { useDrift } from '../../providers/DriftProvider';
-import { theme } from '../../config/theme';
-import clsx from 'clsx';
+import { MarketData, TechnicalIndicators } from '../../types/indicators';
 
 const LoadingSpinner = () => (
     <div className="flex justify-center items-center h-64">
@@ -15,7 +10,7 @@ const LoadingSpinner = () => (
 );
 
 const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
-    <div className="bg-red-900/20 border border-red-500 text-red-100 px-4 py-3 rounded relative">
+    <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative">
         <strong className="font-bold">Error: </strong>
         <span className="block sm:inline">{error}</span>
         <button
@@ -27,84 +22,102 @@ const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }
     </div>
 );
 
-interface TopBarMetrics {
-    accountValue: number;
-    dailyPnL: number;
-    totalPnL: number;
-    availableBalance: number;
-    marginUsage: number;
-}
-
-const TopBar: React.FC<TopBarMetrics> = ({
-    accountValue,
-    dailyPnL,
-    totalPnL,
-    availableBalance,
-    marginUsage
-}) => (
-    <div className="grid grid-cols-5 gap-4 mb-6">
-        {[
-            { label: 'Account Value', value: `$${accountValue.toFixed(2)}` },
-            { label: 'Daily P&L', value: `${dailyPnL >= 0 ? '+' : ''}$${dailyPnL.toFixed(2)}`, 
-              color: dailyPnL >= 0 ? 'text-green-500' : 'text-red-500' },
-            { label: 'Total P&L', value: `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}`,
-              color: totalPnL >= 0 ? 'text-green-500' : 'text-red-500' },
-            { label: 'Available Balance', value: `$${availableBalance.toFixed(2)}` },
-            { label: 'Margin Usage', value: `${marginUsage.toFixed(2)}%`,
-              color: marginUsage > 80 ? 'text-red-500' : marginUsage > 50 ? 'text-yellow-500' : 'text-green-500' }
-        ].map(({ label, value, color }) => (
-            <div key={label} className="bg-slate-800 rounded-lg p-4">
-                <div className="text-sm text-slate-400">{label}</div>
-                <div className={clsx('text-lg font-semibold mt-1', color || 'text-slate-200')}>
-                    {value}
-                </div>
-            </div>
-        ))}
-    </div>
-);
-
 export const TradingDashboard: React.FC = () => {
-    const {
-        positions,
-        accountValue,
-        marginRatio,
-        unrealizedPnl,
-        isInitialized,
-        isLoading,
-        error,
-        placeOrder,
-        closePosition,
-        emergencyClose,
-        refresh
-    } = useDrift();
+    const [marketData, setMarketData] = useState<MarketData[]>([]);
+    const [indicators, setIndicators] = useState<TechnicalIndicators | null>(null);
+    const [prediction, setPrediction] = useState<number | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
+    const [tradingStrategy] = useState(() => new TradingStrategy());
+    const [initializing, setInitializing] = useState(true);
 
-    const mockMetrics: TopBarMetrics = {
-        accountValue,
-        dailyPnL: unrealizedPnl,
-        totalPnL: unrealizedPnl,
-        availableBalance: accountValue,
-        marginUsage: marginRatio * 100
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // Fetch market data
+            const data = await tradingStrategy.fetchMarketData(selectedSymbol);
+            setMarketData(data);
+
+            // Calculate indicators
+            const rawIndicators = tradingStrategy.calculateIndicators(data);
+            
+            // Transform Bollinger Bands data to match our type
+            const transformedIndicators: TechnicalIndicators = {
+                rsi: rawIndicators.rsi,
+                macd: rawIndicators.macd,
+                bollinger: rawIndicators.bollinger.map(band => ({
+                    upper: band.upper,
+                    middle: band.middle,
+                    lower: band.lower
+                }))
+            };
+            
+            setIndicators(transformedIndicators);
+
+            // Train model and make prediction
+            await tradingStrategy.trainModel(data);
+            const nextPricePrediction = await tradingStrategy.predict(data);
+            setPrediction(nextPricePrediction);
+
+            setLoading(false);
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            setError(err instanceof Error ? err.message : 'An error occurred while fetching data');
+            setLoading(false);
+        }
+    }, [selectedSymbol, tradingStrategy]);
+
+    useEffect(() => {
+        const initializeAndFetch = async () => {
+            try {
+                await tradingStrategy.initialize();
+                setInitializing(false);
+                await fetchData();
+            } catch (err) {
+                console.error('Error initializing:', err);
+                setError(err instanceof Error ? err.message : 'Failed to initialize trading strategy');
+                setInitializing(false);
+            }
+        };
+
+        initializeAndFetch();
+    }, [fetchData]);
+
+    const getSignalStrength = () => {
+        if (!indicators || !prediction || marketData.length === 0) return 'Neutral';
+
+        const lastClose = marketData[marketData.length - 1].close;
+        const lastRsi = indicators.rsi[indicators.rsi.length - 1];
+        const priceChange = ((prediction - lastClose) / lastClose) * 100;
+
+        if (priceChange > 2 && lastRsi < 70) return 'Strong Buy';
+        if (priceChange > 0.5 && lastRsi < 60) return 'Buy';
+        if (priceChange < -2 && lastRsi > 30) return 'Strong Sell';
+        if (priceChange < -0.5 && lastRsi > 40) return 'Sell';
+        return 'Neutral';
     };
 
-    const mockOrderBook = {
-        bids: Array.from({ length: 10 }, (_, i) => ({
-            price: 40000 - i * 10,
-            size: Math.random() * 2,
-            total: Math.random() * 10
-        })),
-        asks: Array.from({ length: 10 }, (_, i) => ({
-            price: 40100 + i * 10,
-            size: Math.random() * 2,
-            total: Math.random() * 10
-        })),
-        spread: 100
+    const getSignalColor = (signal: string) => {
+        switch (signal) {
+            case 'Strong Buy':
+            case 'Buy':
+                return 'text-green-600';
+            case 'Strong Sell':
+            case 'Sell':
+                return 'text-red-600';
+            default:
+                return 'text-yellow-600';
+        }
     };
 
-    if (!isInitialized) {
+    if (initializing) {
         return (
-            <div className="min-h-screen bg-slate-900 p-6">
-                <div className="max-w-7xl mx-auto">
-                    <h1 className="text-2xl font-bold text-slate-200 mb-6">Initializing AI Trading Model...</h1>
+            <div className="p-6 max-w-7xl mx-auto">
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                    <h1 className="text-2xl font-bold mb-6">Initializing AI Trading Model...</h1>
                     <LoadingSpinner />
                 </div>
             </div>
@@ -113,118 +126,81 @@ export const TradingDashboard: React.FC = () => {
 
     return (
         <ErrorBoundary>
-            <div className="min-h-screen bg-slate-900 p-6">
-                <div className="max-w-7xl mx-auto">
-                    {/* Header */}
+            <div className="p-6 max-w-7xl mx-auto">
+                <div className="bg-white rounded-lg shadow-lg p-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold text-slate-200">AI Trading Dashboard</h1>
-                        <div className="flex space-x-4">
-                            <button
-                                onClick={refresh}
-                                disabled={isLoading}
-                                className={clsx(
-                                    'px-4 py-2 rounded-lg',
-                                    'bg-slate-800 border border-slate-700',
-                                    'text-slate-200 hover:bg-slate-700 transition-colors'
-                                )}
-                            >
-                                Refresh
-                            </button>
-                            <button
-                                onClick={emergencyClose}
-                                disabled={isLoading || positions.length === 0}
-                                className={clsx(
-                                    'px-4 py-2 rounded-lg',
-                                    'bg-red-600 hover:bg-red-700 transition-colors',
-                                    'text-white',
-                                    (isLoading || positions.length === 0) && 'opacity-50 cursor-not-allowed'
-                                )}
-                            >
-                                Emergency Close
-                            </button>
-                        </div>
+                        <h1 className="text-2xl font-bold">AI Trading Dashboard</h1>
+                        <select
+                            value={selectedSymbol}
+                            onChange={(e) => setSelectedSymbol(e.target.value)}
+                            className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            disabled={loading}
+                        >
+                            <option value="BTCUSDT">Bitcoin (BTC/USDT)</option>
+                            <option value="ETHUSDT">Ethereum (ETH/USDT)</option>
+                            <option value="SOLUSDT">Solana (SOL/USDT)</option>
+                        </select>
                     </div>
-
-                    {/* Top Metrics Bar */}
-                    <TopBar {...mockMetrics} />
                     
-                    {error && <ErrorDisplay error={error} onRetry={refresh} />}
+                    {error && <ErrorDisplay error={error} onRetry={fetchData} />}
                     
-                    {isLoading ? (
+                    {loading ? (
                         <LoadingSpinner />
                     ) : (
-                        <div className="space-y-6">
-                            {/* Main Trading View */}
-                            <div className="grid grid-cols-4 gap-6">
-                                {/* Chart */}
-                                <div className="col-span-3">
-                                    <TradingChart
-                                        data={positions.map(pos => ({
-                                            timestamp: Date.now(),
-                                            open: pos.entryPrice,
-                                            high: pos.entryPrice * 1.1,
-                                            low: pos.entryPrice * 0.9,
-                                            close: pos.entryPrice,
-                                            volume: pos.size
-                                        }))}
-                                        timeframe="1m"
-                                        indicators={['MA20', 'MA50']}
-                                        height={600}
-                                    />
-                                </div>
-                                
-                                {/* Order Book */}
-                                <div className="col-span-1">
-                                    <OrderBook
-                                        bids={mockOrderBook.bids}
-                                        asks={mockOrderBook.asks}
-                                        spread={mockOrderBook.spread}
-                                    />
-                                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <h2 className="text-xl font-semibold mb-4">Market Data</h2>
+                                {marketData.length > 0 && (
+                                    <div className="space-y-2">
+                                        <p>Current Price: ${marketData[marketData.length - 1].close.toFixed(2)}</p>
+                                        <p>24h High: ${marketData[marketData.length - 1].high.toFixed(2)}</p>
+                                        <p>24h Low: ${marketData[marketData.length - 1].low.toFixed(2)}</p>
+                                        <p>24h Volume: {marketData[marketData.length - 1].volume.toFixed(2)}</p>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Trading Controls */}
-                            <TradingControls
-                                onSubmitOrder={placeOrder}
-                                maxLeverage={20}
-                                availableBalance={accountValue}
-                            />
-
-                            {/* Positions */}
-                            {positions.length > 0 && (
-                                <div className="bg-slate-800 rounded-lg p-4">
-                                    <h2 className="text-xl font-semibold text-slate-200 mb-4">Open Positions</h2>
-                                    <div className="grid grid-cols-6 gap-4 text-sm text-slate-400 mb-2">
-                                        <div>Market</div>
-                                        <div>Size</div>
-                                        <div>Entry Price</div>
-                                        <div>Current PnL</div>
-                                        <div>Liquidation Price</div>
-                                        <div></div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <h2 className="text-xl font-semibold mb-4">Technical Indicators</h2>
+                                {indicators && (
+                                    <div className="space-y-2">
+                                        <p>RSI: {indicators.rsi[indicators.rsi.length - 1]?.toFixed(2)}</p>
+                                        <p>MACD: {indicators.macd.MACD[indicators.macd.MACD.length - 1]?.toFixed(2)}</p>
+                                        <p>Signal: {indicators.macd.signal[indicators.macd.signal.length - 1]?.toFixed(2)}</p>
+                                        <p>Bollinger Upper: {indicators.bollinger[indicators.bollinger.length - 1]?.upper.toFixed(2)}</p>
+                                        <p>Bollinger Lower: {indicators.bollinger[indicators.bollinger.length - 1]?.lower.toFixed(2)}</p>
                                     </div>
-                                    {positions.map((position) => (
-                                        <div key={position.market} className="grid grid-cols-6 gap-4 py-2 border-t border-slate-700">
-                                            <div className="text-slate-200">{position.market}</div>
-                                            <div className={position.direction === 'long' ? 'text-green-500' : 'text-red-500'}>
-                                                {position.direction === 'long' ? '+' : '-'}{Math.abs(position.size)}
-                                            </div>
-                                            <div className="text-slate-200">${position.entryPrice.toFixed(2)}</div>
-                                            <div className={position.unrealizedPnl >= 0 ? 'text-green-500' : 'text-red-500'}>
-                                                ${position.unrealizedPnl.toFixed(2)}
-                                            </div>
-                                            <div className="text-slate-200">${position.liquidationPrice.toFixed(2)}</div>
-                                            <div>
-                                                <button
-                                                    onClick={() => closePosition(position.market)}
-                                                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                                                >
-                                                    Close
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                )}
+                            </div>
+
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <h2 className="text-xl font-semibold mb-4">ML Prediction</h2>
+                                {prediction !== null && (
+                                    <div className="space-y-2">
+                                        <p>Next Price Prediction: ${prediction.toFixed(2)}</p>
+                                        <p className={`font-bold ${getSignalColor(getSignalStrength())}`}>
+                                            Signal: {getSignalStrength()}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <h2 className="text-xl font-semibold mb-4">Controls</h2>
+                                <div className="space-y-4">
+                                    <button
+                                        onClick={fetchData}
+                                        disabled={loading}
+                                        className={`w-full py-2 px-4 rounded transition-colors ${
+                                            loading
+                                                ? 'bg-gray-400 cursor-not-allowed'
+                                                : 'bg-blue-500 hover:bg-blue-600 text-white'
+                                        }`}
+                                    >
+                                        {loading ? 'Refreshing...' : 'Refresh Data'}
+                                    </button>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     )}
                 </div>

@@ -1,36 +1,27 @@
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    nodePolyfills({
-      globals: {
-        Buffer: true,
-        global: true,
-        process: true,
-      },
-      protocolImports: true,
-    }),
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src')
     }
   },
-  define: {
-    'process.env': '{}',
-    'global': {},
-  },
   server: {
-    port: 8080,
-    host: true,
-    cors: true,
-    watch: {
-      usePolling: true
+    port: 3001,
+    host: true
+  },
+  optimizeDeps: {
+    exclude: ['@rollup/rollup-linux-x64-gnu', '@rollup/rollup-linux-x64-musl']
+  },
+  build: {
+    rollupOptions: {
+      external: [
+        '@rollup/rollup-linux-x64-gnu',
+        '@rollup/rollup-linux-x64-musl'
+      ]
     }
   }
 });

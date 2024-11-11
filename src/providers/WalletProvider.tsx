@@ -1,46 +1,69 @@
+import React, { createContext, useContext, useState } from 'react'
 
-import React, { FC, ReactNode, useMemo } from 'react';
-import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { clusterApiUrl } from '@solana/web3.js';
-
-// Import wallet adapter CSS
-import '@solana/wallet-adapter-react-ui/styles.css';
-
-interface Props {
-  children: ReactNode;
+interface WalletState {
+  connected: boolean
+  error: string | null
 }
 
-export const WalletProvider: FC<Props> = ({ children }) => {
-  // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
-  const network = WalletAdapterNetwork.Devnet;
+interface WalletContextType extends WalletState {
+  connect: () => Promise<void>
+  disconnect: () => Promise<void>
+}
 
-  // You can also provide a custom RPC endpoint
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+const WalletContext = createContext<WalletContextType | null>(null)
 
-  // Initialize wallets array with Phantom
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-    ],
-    []
-  );
+export function useWallet() {
+  const context = useContext(WalletContext)
+  if (!context) throw new Error('useWallet must be used within WalletProvider')
+  return context
+}
+
+interface Props {
+  children: React.ReactNode
+}
+
+export function WalletProvider({ children }: Props) {
+  const [state, setState] = useState<WalletState>({
+    connected: false,
+    error: null
+  })
+
+  const connect = async () => {
+    try {
+      const { solana } = window as any
+      if (!solana?.isPhantom) {
+        setState(prev => ({ ...prev, error: 'Phantom wallet not found!' }))
+        return
+      }
+      const response = await solana.connect()
+      setState(prev => ({
+        ...prev,
+        connected: true,
+        error: null
+      }))
+    } catch (error) {
+      setState(prev => ({ ...prev, error: 'Failed to connect' }))
+    }
+  }
+
+  const disconnect = async () => {
+    try {
+      const { solana } = window as any
+      if (solana) {
+        await solana.disconnect()
+        setState({
+          connected: false,
+          error: null
+        })
+      }
+    } catch (error) {
+      setState(prev => ({ ...prev, error: 'Failed to disconnect' }))
+    }
+  }
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          {children}
-        </WalletModalProvider>
-      </SolanaWalletProvider>
-    </ConnectionProvider>
-  );
-};
-
-// Re-export hooks from wallet adapter for convenience
-export {
-  useWallet,
-  useConnection,
-} from '@solana/wallet-adapter-react';
+    <WalletContext.Provider value={{ ...state, connect, disconnect }}>
+      {children}
+    </WalletContext.Provider>
+  )
+}

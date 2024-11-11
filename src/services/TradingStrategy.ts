@@ -1,3 +1,4 @@
+
 import * as tf from '@tensorflow/tfjs';
 import { RSI, BollingerBands } from 'technicalindicators';
 import { GoalTrackingService } from './GoalTrackingService';
@@ -24,60 +25,42 @@ export class TradingStrategy {
     private goalTracker: GoalTrackingService;
     private recentDailyReturns: number[] = [];
     private startDate: number;
-    private initialized: boolean = false;
     
-    constructor(initialDeposit: number = 1000) {
+    constructor(initialDeposit: number) {
         this.goalTracker = new GoalTrackingService(initialDeposit);
         this.startDate = Date.now();
+        this.initialize();
     }
 
     async initialize() {
-        if (this.initialized) return;
+        // Create a simple LSTM model for price prediction
+        this.model = tf.sequential({
+            layers: [
+                tf.layers.lstm({
+                    units: 50,
+                    returnSequences: true,
+                    inputShape: [30, 5] // 30 days of 5 features (OHLCV)
+                }),
+                tf.layers.dropout({
+                    rate: 0.2
+                }),
+                tf.layers.lstm({
+                    units: 50,
+                    returnSequences: false
+                }),
+                tf.layers.dense({
+                    units: 1
+                })
+            ]
+        });
 
-        try {
-            // Wait for TensorFlow to be ready
-            await tf.ready();
-            console.log('TensorFlow initialized successfully');
-
-            // Create a simple LSTM model for price prediction
-            this.model = tf.sequential({
-                layers: [
-                    tf.layers.lstm({
-                        units: 50,
-                        returnSequences: true,
-                        inputShape: [30, 5] // 30 days of 5 features (OHLCV)
-                    }),
-                    tf.layers.dropout({
-                        rate: 0.2
-                    }),
-                    tf.layers.lstm({
-                        units: 50,
-                        returnSequences: false
-                    }),
-                    tf.layers.dense({
-                        units: 1
-                    })
-                ]
-            });
-
-            this.model.compile({
-                optimizer: tf.train.adam(0.001),
-                loss: 'meanSquaredError'
-            });
-
-            this.initialized = true;
-            console.log('TradingStrategy initialized successfully');
-        } catch (error) {
-            console.error('Failed to initialize TradingStrategy:', error);
-            throw error;
-        }
+        this.model.compile({
+            optimizer: tf.train.adam(0.001),
+            loss: 'meanSquaredError'
+        });
     }
 
     async fetchMarketData(symbol: string, interval: string = '1d', limit: number = 1000): Promise<MarketData[]> {
-        if (!this.initialized) {
-            await this.initialize();
-        }
-
         try {
             const response = await fetch(
                 `${this.baseUrl}/klines?symbol=${symbol.replace('/', '')}&interval=${interval}&limit=${limit}`
@@ -104,10 +87,6 @@ export class TradingStrategy {
     }
 
     calculateIndicators(data: MarketData[]) {
-        if (!this.initialized) {
-            throw new Error('TradingStrategy not initialized');
-        }
-
         const closes = data.map(d => d.close);
         const highs = data.map(d => d.high);
         const lows = data.map(d => d.low);
@@ -165,10 +144,6 @@ export class TradingStrategy {
     }
 
     async trainModel(data: MarketData[]) {
-        if (!this.initialized || !this.model) {
-            throw new Error('TradingStrategy not initialized');
-        }
-
         const windowSize = 30;
         const features = this.prepareFeatures(data);
         const labels = this.prepareLabels(data);
@@ -177,23 +152,21 @@ export class TradingStrategy {
         const xs = tf.tensor3d(features);
         const ys = tf.tensor2d(labels);
 
-        try {
-            // Train the model
-            await this.model.fit(xs, ys, {
-                epochs: 50,
-                batchSize: 32,
-                validationSplit: 0.1,
-                callbacks: {
-                    onEpochEnd: (epoch, logs) => {
-                        console.log(`Epoch ${epoch}: loss = ${logs?.loss}`);
-                    }
+        // Train the model
+        await this.model?.fit(xs, ys, {
+            epochs: 50,
+            batchSize: 32,
+            validationSplit: 0.1,
+            callbacks: {
+                onEpochEnd: (epoch, logs) => {
+                    console.log(`Epoch ${epoch}: loss = ${logs?.loss}`);
                 }
-            });
-        } finally {
-            // Clean up tensors
-            xs.dispose();
-            ys.dispose();
-        }
+            }
+        });
+
+        // Clean up tensors
+        xs.dispose();
+        ys.dispose();
     }
 
     private prepareFeatures(data: MarketData[]) {
@@ -226,55 +199,50 @@ export class TradingStrategy {
     }
 
     async predict(data: MarketData[]): Promise<PredictionResult> {
-        if (!this.initialized || !this.model) {
+        if (!this.model) {
             throw new Error('Model not initialized');
         }
 
         const features = this.prepareFeatures(data.slice(-31, -1));
         const xs = tf.tensor3d([features[0]]);
-        let prediction: tf.Tensor | null = null;
-        let predictedPrice: number;
+        const prediction = this.model.predict(xs) as tf.Tensor;
+        const predictedPrice = prediction.dataSync()[0];
+        
+        // Calculate prediction confidence and trend
+        const currentPrice = data[data.length - 1].close;
+        const priceChange = (predictedPrice - currentPrice) / currentPrice;
+        const volatility = this.calculateVolatility(data);
+        
+        // Determine trend and confidence
+        const trend = priceChange > 0.02 ? 'bullish' : 
+                     priceChange < -0.02 ? 'bearish' : 
+                     'neutral';
+        
+        const confidence = Math.min(
+            Math.abs(priceChange) / volatility,
+            1
+        );
 
-        try {
-            prediction = this.model.predict(xs) as tf.Tensor;
-            predictedPrice = prediction.dataSync()[0];
-            
-            // Calculate prediction confidence and trend
-            const currentPrice = data[data.length - 1].close;
-            const priceChange = (predictedPrice - currentPrice) / currentPrice;
-            const volatility = this.calculateVolatility(data);
-            
-            // Determine trend and confidence
-            const trend = priceChange > 0.02 ? 'bullish' : 
-                         priceChange < -0.02 ? 'bearish' : 
-                         'neutral';
-            
-            const confidence = Math.min(
-                Math.abs(priceChange) / volatility,
-                1
-            );
-
-            // Update daily returns for goal tracking
-            if (data.length >= 2) {
-                const dailyReturn = (data[data.length - 1].close - data[data.length - 2].close) / 
-                                   data[data.length - 2].close;
-                this.recentDailyReturns.push(dailyReturn);
-                if (this.recentDailyReturns.length > 30) {
-                    this.recentDailyReturns.shift();
-                }
+        // Update daily returns for goal tracking
+        if (data.length >= 2) {
+            const dailyReturn = (data[data.length - 1].close - data[data.length - 2].close) / 
+                               data[data.length - 2].close;
+            this.recentDailyReturns.push(dailyReturn);
+            if (this.recentDailyReturns.length > 30) {
+                this.recentDailyReturns.shift();
             }
-            
-            return {
-                predictedPrice,
-                confidence,
-                volatility,
-                trend
-            };
-        } finally {
-            // Clean up tensors
-            xs.dispose();
-            if (prediction) prediction.dispose();
         }
+        
+        // Clean up tensors
+        xs.dispose();
+        prediction.dispose();
+        
+        return {
+            predictedPrice,
+            confidence,
+            volatility,
+            trend
+        };
     }
 
     public getGoalProgress(currentValue: number): string {
