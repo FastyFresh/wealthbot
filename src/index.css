@@ -13,6 +13,12 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes gradient {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.6s ease-out forwards;
 }
@@ -41,5 +47,46 @@
 
   .gradient-text {
     @apply bg-gradient-to-r from-[#38BDF8] to-[#818CF8] bg-clip-text text-transparent;
+  }
+
+  .feature-card {
+    @apply relative overflow-hidden rounded-xl bg-[#1E293B] p-8 transition-all duration-300
+           hover:scale-[1.02] hover:shadow-lg hover:shadow-[#38BDF8]/10;
+  }
+
+  .feature-card-icon {
+    @apply mb-6 flex h-12 w-12 items-center justify-center rounded-lg
+           transition-all duration-300 group-hover:scale-110;
+  }
+
+  .feature-card-title {
+    @apply mb-4 text-xl font-semibold transition-colors duration-300
+           group-hover:text-[#38BDF8];
+  }
+
+  .feature-card-description {
+    @apply text-gray-400 transition-colors duration-300
+           group-hover:text-gray-300;
+  }
+
+  .stats-card {
+    @apply rounded-xl bg-[#1E293B]/50 p-8 text-center backdrop-blur-sm
+           transition-all duration-300 hover:scale-[1.02]
+           hover:shadow-lg hover:shadow-[#38BDF8]/10;
+  }
+
+  .stats-card-icon {
+    @apply mb-4 flex h-12 w-12 items-center justify-center rounded-full
+           bg-[#1E293B] transition-all duration-300
+           group-hover:scale-110;
+  }
+
+  .stats-card-value {
+    @apply mb-2 text-4xl font-bold bg-gradient-to-r from-[#38BDF8] to-[#818CF8]
+           bg-clip-text text-transparent;
+  }
+
+  .stats-card-label {
+    @apply text-gray-400;
   }
 }

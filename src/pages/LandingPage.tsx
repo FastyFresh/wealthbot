@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { ArrowRight, Shield, Zap, TrendingUp, Menu, X, Bot, ChartBar, Wallet, Users, Clock, Award } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowRight, Shield, Zap, TrendingUp, Menu, X, Bot, ChartBar, Wallet, Users, Clock, Award, ArrowUpRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
   isScrolled: boolean;
@@ -104,26 +104,64 @@ interface AnimatedFeatureCardProps {
 }
 
 const AnimatedFeatureCard: React.FC<AnimatedFeatureCardProps> = ({ icon, title, description, color, delay }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
       className="group bg-[#1E293B] p-8 rounded-xl transform transition-all duration-300 hover:scale-[1.02] 
                 hover:shadow-lg hover:shadow-[#38BDF8]/10 hover:border-[#38BDF8]/20 border border-transparent
-                relative overflow-hidden"
+                relative overflow-hidden cursor-pointer"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#38BDF8]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      
+      <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,transparent_25%,rgba(68,68,68,.2)_50%,transparent_75%,transparent_100%)] bg-[length:250px_250px] animate-[gradient_15s_linear_infinite]" />
+      
       <motion.div
-        whileHover={{ scale: 1.1, rotate: 5 }}
+        animate={isHovered ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
+        transition={{ duration: 0.3 }}
         className={`bg-[#${color}]/20 w-12 h-12 rounded-lg flex items-center justify-center mb-6 
                   group-hover:shadow-[0_0_20px_rgba(${parseInt(color.substring(0,2),16)},${parseInt(color.substring(2,4),16)},${parseInt(color.substring(4,6),16)},0.3)]`}
       >
         {icon}
       </motion.div>
-      <h4 className="text-xl font-semibold mb-4 transition-colors duration-300 group-hover:text-[#38BDF8]">{title}</h4>
-      <p className="text-gray-400 transition-colors duration-300 group-hover:text-gray-300">{description}</p>
+      
+      <motion.h4 
+        animate={isHovered ? { x: 10 } : { x: 0 }}
+        className="text-xl font-semibold mb-4 transition-colors duration-300 group-hover:text-[#38BDF8] flex items-center gap-2"
+      >
+        {title}
+        <motion.span
+          initial={{ opacity: 0, scale: 0 }}
+          animate={isHovered ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ArrowUpRight className="w-4 h-4" />
+        </motion.span>
+      </motion.h4>
+      
+      <motion.p 
+        animate={isHovered ? { y: 0, opacity: 1 } : { y: 0, opacity: 0.7 }}
+        className="text-gray-400 transition-colors duration-300 group-hover:text-gray-300"
+      >
+        {description}
+      </motion.p>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={isHovered ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+        transition={{ duration: 0.2 }}
+        className="mt-6 pt-4 border-t border-gray-700/50"
+      >
+        <span className="text-[#38BDF8] text-sm flex items-center gap-2">
+          Learn more <ArrowRight className="w-4 h-4" />
+        </span>
+      </motion.div>
     </motion.div>
   );
 };
@@ -132,19 +170,19 @@ const FEATURES = [
   {
     icon: <Bot className="h-6 w-6 text-[#38BDF8]" />,
     title: "AI-Powered Trading",
-    description: "Our sophisticated AI algorithms execute trades 24/7, maximizing your potential returns while you sleep.",
+    description: "Experience 24/7 automated trading powered by sophisticated AI algorithms. Our system analyzes market patterns, executes trades, and optimizes your portfolio while you sleep.",
     color: "38BDF8"
   },
   {
     icon: <Shield className="h-6 w-6 text-[#818CF8]" />,
     title: "Smart Risk Management",
-    description: "Advanced risk controls and position sizing ensure your portfolio stays protected in all market conditions.",
+    description: "Advanced risk controls and dynamic position sizing protect your portfolio in all market conditions. Our AI constantly monitors and adjusts to maintain optimal risk levels.",
     color: "818CF8"
   },
   {
     icon: <ChartBar className="h-6 w-6 text-[#22C55E]" />,
     title: "$1M Growth Target",
-    description: "Strategic trading aimed at growing your portfolio to $1,000,000 over 3-5 years through compound returns.",
+    description: "Strategic compound growth targeting $1,000,000 over 3-5 years. Our AI implements sophisticated trading strategies designed to maximize long-term returns.",
     color: "22C55E"
   }
 ];
@@ -212,6 +250,36 @@ const STEPS = [
     color: "22C55E"
   }
 ];
+
+const StatsCard: React.FC<{ stat: typeof STATS[0]; index: number }> = ({ stat, index }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.2 }}
+      whileHover={{ y: -5 }}
+      className="text-center p-8 bg-[#1E293B]/50 rounded-xl backdrop-blur-sm"
+    >
+      <motion.div 
+        className="mb-4 flex justify-center"
+        whileHover={{ scale: 1.1, rotate: 5 }}
+      >
+        <div className="w-12 h-12 rounded-full bg-[#1E293B] flex items-center justify-center
+                       shadow-[0_0_20px_rgba(56,189,248,0.2)]">
+          {stat.icon}
+        </div>
+      </motion.div>
+      <motion.h4 
+        className="text-4xl font-bold mb-2 bg-gradient-to-r from-[#38BDF8] to-[#818CF8] bg-clip-text text-transparent"
+        whileHover={{ scale: 1.05 }}
+      >
+        {stat.prefix}{stat.value}{stat.suffix}
+      </motion.h4>
+      <p className="text-gray-400">{stat.label}</p>
+    </motion.div>
+  );
+};
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -344,24 +412,7 @@ const LandingPage: React.FC = () => {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {STATS.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-                className="text-center"
-              >
-                <div className="mb-4 flex justify-center">
-                  <div className="w-12 h-12 rounded-full bg-[#1E293B] flex items-center justify-center">
-                    {stat.icon}
-                  </div>
-                </div>
-                <h4 className="text-4xl font-bold mb-2 bg-gradient-to-r from-[#38BDF8] to-[#818CF8] bg-clip-text text-transparent">
-                  {stat.prefix}{stat.value}{stat.suffix}
-                </h4>
-                <p className="text-gray-400">{stat.label}</p>
-              </motion.div>
+              <StatsCard key={index} stat={stat} index={index} />
             ))}
           </div>
         </div>
@@ -385,13 +436,17 @@ const LandingPage: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.2 }}
-                className="bg-[#1E293B] p-8 rounded-xl transform transition-all duration-300 hover:scale-[1.02]
+                whileHover={{ scale: 1.02 }}
+                className="bg-[#1E293B] p-8 rounded-xl transform transition-all duration-300
                          hover:shadow-lg hover:shadow-[#38BDF8]/10 group"
               >
-                <div className="mb-6 w-12 h-12 rounded-lg bg-[#38BDF8]/10 flex items-center justify-center
-                              group-hover:scale-110 transition-transform duration-300">
+                <motion.div 
+                  className="mb-6 w-12 h-12 rounded-lg bg-[#38BDF8]/10 flex items-center justify-center
+                              group-hover:scale-110 transition-transform duration-300"
+                  whileHover={{ rotate: 5 }}
+                >
                   {indicator.icon}
-                </div>
+                </motion.div>
                 <h4 className="text-xl font-semibold mb-4 text-[#38BDF8]">{indicator.title}</h4>
                 <p className="text-gray-400">{indicator.description}</p>
               </motion.div>
@@ -421,11 +476,14 @@ const LandingPage: React.FC = () => {
                   transition={{ duration: 0.5, delay: index * 0.2 }}
                   className="flex items-start space-x-6 group"
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-[#${step.color}]/20 flex items-center justify-center flex-shrink-0
-                                transform group-hover:scale-110 transition-all duration-300
-                                group-hover:shadow-[0_0_20px_rgba(${parseInt(step.color.substring(0,2),16)},${parseInt(step.color.substring(2,4),16)},${parseInt(step.color.substring(4,6),16)},0.3)]`}>
+                  <motion.div 
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className={`w-12 h-12 rounded-xl bg-[#${step.color}]/20 flex items-center justify-center flex-shrink-0
+                                transform transition-all duration-300
+                                group-hover:shadow-[0_0_20px_rgba(${parseInt(step.color.substring(0,2),16)},${parseInt(step.color.substring(2,4),16)},${parseInt(step.color.substring(4,6),16)},0.3)]`}
+                  >
                     {step.icon}
-                  </div>
+                  </motion.div>
                   <div className="transform group-hover:translate-x-2 transition-transform duration-300">
                     <h4 className="text-xl font-semibold mb-2 text-[#38BDF8]">{step.title}</h4>
                     <p className="text-gray-400">{step.description}</p>
@@ -445,6 +503,29 @@ const LandingPage: React.FC = () => {
             <p className="mt-2">
               Trading cryptocurrencies involves risk. Please invest responsibly.
             </p>
+            <div className="mt-6 flex justify-center space-x-6">
+              <motion.a 
+                href="#" 
+                whileHover={{ scale: 1.1 }}
+                className="text-gray-400 hover:text-[#38BDF8] transition-colors duration-300"
+              >
+                Terms of Service
+              </motion.a>
+              <motion.a 
+                href="#" 
+                whileHover={{ scale: 1.1 }}
+                className="text-gray-400 hover:text-[#38BDF8] transition-colors duration-300"
+              >
+                Privacy Policy
+              </motion.a>
+              <motion.a 
+                href="#" 
+                whileHover={{ scale: 1.1 }}
+                className="text-gray-400 hover:text-[#38BDF8] transition-colors duration-300"
+              >
+                Contact Us
+              </motion.a>
+            </div>
           </div>
         </div>
       </footer>
