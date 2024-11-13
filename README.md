@@ -1,115 +1,145 @@
+# Wealthbot: Your AI-Powered Hedge Fund
 
-# Wealthbot: Autonomous Trading dApp on Solana
+## Overview
+Wealthbot is an autonomous DeFi trading platform that transforms your Solana wallet into a professional-grade hedge fund. Using advanced AI algorithms and the Drift Protocol, it automatically trades SOL perpetuals to help grow your investment toward a $1,000,000 target over 3-5 years.
 
-## Objective
-Wealthbot aims to help users grow their equity autonomously by trading SOL perpetuals on the Drift Protocol within the Solana blockchain. The app uses agent-driven operations inspired by hedge fund strategies, targeting long-term compounded growth with a goal of reaching $1,000,000 in equity over 3-5 years.
+### Key Features
+- **Autonomous Trading**: AI-powered 24/7 trading without manual intervention
+- **Professional Risk Management**: Dynamic position sizing and advanced risk controls
+- **Simple Setup**: Start with just $100 worth of SOL
+- **Transparent Progress**: Real-time monitoring of your growth journey
+- **Set and Forget**: True passive investment on Solana blockchain
 
-## How to Access the App
+## Technology Stack
+- React/TypeScript
+- Solana Web3.js
+- Drift Protocol
+- Docker
+- Tailwind CSS
+- Python (AI/ML)
 
-1. Visit [app.wealthbot.io](https://app.wealthbot.io)
-2. Connect your Phantom Wallet (Install from [phantom.app](https://phantom.app) if you don't have it)
-3. Ensure you have minimum $125 SOL in your wallet (for gas fees)
-4. Click "Connect Wallet" and approve the connection
-5. Deposit minimum $100 SOL to start trading
-6. Click "Start" and let the autonomous system work
+## Quick Start
 
-That's it! The system will handle everything else automatically. You can:
-- Monitor your progress in the dashboard
-- Add more funds anytime to accelerate growth
-- View detailed analytics and performance metrics
+### Prerequisites
+- [Phantom Wallet](https://phantom.app/)
+- [Docker](https://www.docker.com/get-started)
+- Node.js 18+
 
-## "Set It and Forget It" Philosophy
-Wealthbot is designed for complete automation with minimal user intervention:
-1. Connect your Phantom wallet (minimum $125 SOL balance for gas fees)
-2. Deposit minimum $100 SOL to start trading
-3. Click "Start" and let the autonomous system handle everything
-4. Optionally deposit more funds anytime to accelerate growth
-5. Monitor your progress through the dashboard
-
-## Core Features
-
-### 1. User Access
-- Simple One-Click Start: Connect wallet, deposit, and click start
-- Wallet-Based Login: Users access Wealthbot via their Phantom wallet with no additional sign-up requirements
-- Minimum Requirements:
-  - $125 SOL in Phantom wallet (includes buffer for gas fees)
-  - $100 SOL minimum initial deposit for trading
-  - Additional deposits accepted anytime to accelerate growth
-
-### 2. Autonomous Trading Engine
-The system employs multiple specialized agents working in concert:
-
-- **Trading Agent**: Executes SOL perpetual trades on Drift Protocol
-- **Risk Management Agent**: Uses machine learning to dynamically manage risk exposure
-- **Strategy Agent**: Optimizes trading strategies using real-time data for compounded growth
-- **Research Agent**: Tracks SOL and Drift Protocol trends for strategy adjustments
-- **Backtesting Agent**: Validates strategies with historical data
-
-### 3. User Dashboard
-- Displays key metrics like profit/loss, daily compounded growth rate, open trades, and equity status
-- Real-Time Strategy Updates: Shows live adjustments while limiting notifications to critical updates
-- Simple deposit interface to add funds when desired
-
-### 4. Technical Stack
-
-#### Frontend
-- React.js with a modern UI
-- Integration with Phantom Wallet
-- Real-time data visualization
-
-#### Backend
-- Node.js, Python, and optional Rust for secure on-chain operations
-- Machine Learning: TensorFlow or PyTorch for real-time strategy and risk adjustments
-
-#### Development Platform
-- Built and deployed on Replit
-- Integrates Solana Web3.js and Drift Protocol SDK
-
-## Key Differentiator
-Wealthbot stands out as a true "set it and forget it" trading solution on a decentralized platform. Users simply deposit funds and let the autonomous system work toward the goal of significant equity growth, with the flexibility to accelerate growth through additional deposits at any time.
-
-## Development Setup
-
+### Development Setup
 ```bash
-# Clone the repository
-git clone https://github.com/FastyFresh/wealthbot.git
+# Clone repository
+git clone https://github.com/YourUsername/wealthbot.git
+cd wealthbot
 
 # Install dependencies
-cd wealthbot/frontend
+cd frontend
 npm install
 
-# Start the development server
-npm run dev
+# Start development environment
+docker-compose up frontend-dev
 ```
+
+### Testing with Devnet
+1. Switch Phantom wallet to Devnet
+2. Visit `http://localhost:3005`
+3. Connect your wallet
+4. Use Solana Devnet faucet for test SOL
+5. Start trading with test funds
 
 ## Architecture
 
-The system is built around several key agents:
+### Core Components
+```
+frontend/
+├── src/
+│   ├── components/    # React components
+│   ├── pages/        # Route pages
+│   ├── services/     # Trading services
+│   └── providers/    # Context providers
+```
 
-1. **Trading Agent** (`src/agents/TradingAgent.ts`)
-   - Executes trades based on strategy signals
-   - Manages position sizing and entry/exit points
-   - Integrates with Drift Protocol
+### Trading Agents
+- Risk Management Agent
+- Strategy Agent
+- Research Agent
+- Backtesting Agent
 
-2. **Strategy Agent** (`src/agents/StrategyAgent.ts`)
-   - Implements trading strategies
-   - Manages strategy performance metrics
-   - Adapts to market conditions
+### Smart Contract Integration
+- Solana blockchain integration
+- Drift Protocol for perpetuals trading
+- Multi-signature security
 
-3. **Backtesting Agent** (`src/agents/BacktestingAgent.ts`)
-   - Simulates strategies on historical data
-   - Calculates performance metrics
-   - Validates strategy effectiveness
+## Usage
 
-4. **Research Agent** (`src/agents/ResearchAgent.ts`)
-   - Analyzes market trends
-   - Processes market data and news
-   - Provides strategy recommendations
+### Getting Started
+1. Connect Phantom wallet
+2. Deposit minimum $100 worth of SOL
+3. System automatically begins trading
+4. Monitor progress through dashboard
+
+### Risk Management
+- Dynamic position sizing
+- Automated risk controls
+- Maximum drawdown protection
+- Diversified strategy approach
+
+### Performance Monitoring
+- Real-time P&L tracking
+- Progress toward $1M goal
+- Risk metrics dashboard
+- Position management
+
+## Development
+
+### Local Development
+```bash
+# Start development server
+docker-compose up frontend-dev
+
+# Run tests
+npm test
+
+# Build production
+docker-compose up frontend-prod
+```
+
+### Testing
+```bash
+# Unit tests
+npm run test
+
+# Integration tests
+npm run test:integration
+
+# E2E tests
+npm run test:e2e
+```
+
+## Security
+- Segregated wallet architecture
+- Multi-signature transactions
+- Automated risk monitoring
+- Emergency stop functionality
 
 ## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
 ## License
+[License Type] - MIT
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Disclaimer
+Trading cryptocurrency perpetuals involves significant risk. Past performance does not guarantee future results. Please invest responsibly and only risk what you can afford to lose.
+
+## Support
+
+## Roadmap
+- [x] Initial platform development
+- [x] Wallet integration
+- [x] Basic trading functionality
+- [ ] Enhanced AI strategies
+- [ ] Mobile app development
+- [ ] Advanced risk management features
