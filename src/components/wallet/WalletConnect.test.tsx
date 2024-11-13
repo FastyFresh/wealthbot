@@ -1,14 +1,13 @@
-
-import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
-import { WalletConnect } from './WalletConnect'
-import { useWallet } from '../../providers/WalletProvider'
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { WalletConnect } from './WalletConnect';
+import { useWallet } from '../../providers/WalletProvider';
 
 // Mock the useWallet hook
 vi.mock('../../providers/WalletProvider', () => ({
-  useWallet: vi.fn()
-}))
+  useWallet: vi.fn(),
+}));
 
 describe('WalletConnect', () => {
   it('renders disconnected state correctly', () => {
@@ -16,70 +15,70 @@ describe('WalletConnect', () => {
       connected: false,
       error: null,
       connect: vi.fn(),
-      disconnect: vi.fn()
-    })
+      disconnect: vi.fn(),
+    });
 
-    render(<WalletConnect />)
-    
-    expect(screen.getByText('Disconnected')).toBeInTheDocument()
-    expect(screen.getByRole('button')).toHaveTextContent('Connect Wallet')
-  })
+    render(<WalletConnect />);
+
+    expect(screen.getByText('Disconnected')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toHaveTextContent('Connect Wallet');
+  });
 
   it('renders connected state correctly', () => {
     vi.mocked(useWallet).mockReturnValue({
       connected: true,
       error: null,
       connect: vi.fn(),
-      disconnect: vi.fn()
-    })
+      disconnect: vi.fn(),
+    });
 
-    render(<WalletConnect />)
-    
-    expect(screen.getByText('Connected')).toBeInTheDocument()
-    expect(screen.getByRole('button')).toHaveTextContent('Disconnect')
-  })
+    render(<WalletConnect />);
+
+    expect(screen.getByText('Connected')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toHaveTextContent('Disconnect');
+  });
 
   it('displays error message when error exists', () => {
-    const errorMessage = 'Failed to connect wallet'
+    const errorMessage = 'Failed to connect wallet';
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       error: errorMessage,
       connect: vi.fn(),
-      disconnect: vi.fn()
-    })
+      disconnect: vi.fn(),
+    });
 
-    render(<WalletConnect />)
-    
-    expect(screen.getByText(errorMessage)).toBeInTheDocument()
-  })
+    render(<WalletConnect />);
+
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+  });
 
   it('calls connect when clicking connect button', () => {
-    const connectMock = vi.fn()
+    const connectMock = vi.fn();
     vi.mocked(useWallet).mockReturnValue({
       connected: false,
       error: null,
       connect: connectMock,
-      disconnect: vi.fn()
-    })
+      disconnect: vi.fn(),
+    });
 
-    render(<WalletConnect />)
-    
-    fireEvent.click(screen.getByRole('button'))
-    expect(connectMock).toHaveBeenCalled()
-  })
+    render(<WalletConnect />);
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(connectMock).toHaveBeenCalled();
+  });
 
   it('calls disconnect when clicking disconnect button', () => {
-    const disconnectMock = vi.fn()
+    const disconnectMock = vi.fn();
     vi.mocked(useWallet).mockReturnValue({
       connected: true,
       error: null,
       connect: vi.fn(),
-      disconnect: disconnectMock
-    })
+      disconnect: disconnectMock,
+    });
 
-    render(<WalletConnect />)
-    
-    fireEvent.click(screen.getByRole('button'))
-    expect(disconnectMock).toHaveBeenCalled()
-  })
-})
+    render(<WalletConnect />);
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(disconnectMock).toHaveBeenCalled();
+  });
+});

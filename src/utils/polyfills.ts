@@ -11,14 +11,14 @@ export const stream = {};
 export const socksProxyAgent = {};
 
 export default {
-    crypto,
-    http,
-    https,
-    net,
-    tls,
-    zlib,
-    util,
-    buffer,
-    stream,
-    socksProxyAgent
+  crypto,
+  http,
+  https,
+  net,
+  tls,
+  zlib,
+  util,
+  buffer,
+  stream,
+  socksProxyAgent,
 };

@@ -1,4 +1,3 @@
-
 import { TradingStrategy } from '../services/TradingStrategy';
 
 interface StrategyConfig {
@@ -37,13 +36,13 @@ export class StrategyAgent {
     const trendFollowing: StrategyConfig = {
       timeframe: '1h',
       riskLevel: 'medium',
-      indicators: ['MA', 'RSI', 'MACD']
+      indicators: ['MA', 'RSI', 'MACD'],
     };
 
     const meanReversion: StrategyConfig = {
       timeframe: '15m',
       riskLevel: 'medium',
-      indicators: ['Bollinger', 'RSI', 'ATR']
+      indicators: ['Bollinger', 'RSI', 'ATR'],
     };
 
     // Create and register strategies
@@ -54,17 +53,20 @@ export class StrategyAgent {
   public createStrategy(name: string, config: StrategyConfig): void {
     const strategy = new TradingStrategy();
     this.activeStrategies.set(name, strategy);
-    
+
     // Initialize performance metrics
     this.performanceMetrics.set(name, {
       winRate: 0,
       profitFactor: 0,
       sharpeRatio: 0,
-      maxDrawdown: 0
+      maxDrawdown: 0,
     });
   }
 
-  public async evaluateStrategy(name: string, marketData: MarketData[]): Promise<boolean> {
+  public async evaluateStrategy(
+    name: string,
+    marketData: MarketData[]
+  ): Promise<boolean> {
     const strategy = this.activeStrategies.get(name);
     if (!strategy) {
       throw new Error(`Strategy ${name} not found`);
@@ -73,22 +75,22 @@ export class StrategyAgent {
     try {
       // Calculate technical indicators
       const indicators = strategy.calculateIndicators(marketData);
-      
+
       // Train the model with historical data
       await strategy.trainModel(marketData);
-      
+
       // Make prediction
       const prediction = await strategy.predict(marketData);
-      
+
       // Update performance metrics based on prediction and actual outcome
       const lastPrice = marketData[marketData.length - 1].close;
       const isValid = Math.abs(prediction - lastPrice) / lastPrice < 0.02; // 2% threshold
-      
+
       this.updatePerformanceMetrics(name, {
         prediction,
         actual: lastPrice,
         indicators,
-        isValid
+        isValid,
       });
 
       return isValid;
@@ -107,7 +109,7 @@ export class StrategyAgent {
       winRate: this.calculateWinRate(analysis),
       profitFactor: this.calculateProfitFactor(analysis),
       sharpeRatio: this.calculateSharpeRatio(analysis),
-      maxDrawdown: this.calculateMaxDrawdown(analysis)
+      maxDrawdown: this.calculateMaxDrawdown(analysis),
     };
 
     this.performanceMetrics.set(name, updatedMetrics);
@@ -125,7 +127,9 @@ export class StrategyAgent {
 
   private calculateSharpeRatio(analysis: any): number {
     // Implement Sharpe ratio calculation
-    return (analysis.returns - analysis.riskFreeRate) / analysis.volatility || 0;
+    return (
+      (analysis.returns - analysis.riskFreeRate) / analysis.volatility || 0
+    );
   }
 
   private calculateMaxDrawdown(analysis: any): number {

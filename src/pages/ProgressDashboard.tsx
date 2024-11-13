@@ -1,15 +1,29 @@
 import React, { useState } from 'react';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { 
-  Settings, Bell, BarChart2, TrendingUp, 
-  DollarSign, AlertTriangle, ChevronUp 
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import {
+  Settings,
+  Bell,
+  BarChart2,
+  TrendingUp,
+  DollarSign,
+  AlertTriangle,
+  ChevronUp,
 } from 'lucide-react';
 
 // Sample data matching your performance chart pattern
 const performanceData = Array.from({ length: 30 }, (_, i) => ({
   date: `Day ${i + 1}`,
-  portfolioValue: 600 + Math.sin(i/3) * 100 + (i * 2),
-  returns: (Math.sin(i/3) * 5) + 1,
+  portfolioValue: 600 + Math.sin(i / 3) * 100 + i * 2,
+  returns: Math.sin(i / 3) * 5 + 1,
 }));
 
 export default function ProgressDashboard() {
@@ -39,7 +53,9 @@ export default function ProgressDashboard() {
 
         {/* System Status */}
         <div className="absolute bottom-0 left-0 w-full p-6">
-          <h3 className="text-sm font-semibold text-gray-400 mb-4">SYSTEM STATUS</h3>
+          <h3 className="text-sm font-semibold text-gray-400 mb-4">
+            SYSTEM STATUS
+          </h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
               <div className="h-2 w-2 rounded-full bg-green-500" />
@@ -62,8 +78,12 @@ export default function ProgressDashboard() {
         {/* Top Bar */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex space-x-2">
-            <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm">System Online</span>
-            <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-500 text-sm">API Connected</span>
+            <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm">
+              System Online
+            </span>
+            <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-500 text-sm">
+              API Connected
+            </span>
           </div>
           <div className="flex items-center space-x-4">
             <Bell className="h-5 w-5 text-gray-400" />
@@ -102,7 +122,10 @@ export default function ProgressDashboard() {
             <span className="text-gray-400">0.08%</span>
           </div>
           <div className="w-full bg-gray-800 rounded-full h-2">
-            <div className="bg-[#38BDF8] h-2 rounded-full" style={{ width: '0.08%' }}></div>
+            <div
+              className="bg-[#38BDF8] h-2 rounded-full"
+              style={{ width: '0.08%' }}
+            ></div>
           </div>
         </div>
 
@@ -112,12 +135,12 @@ export default function ProgressDashboard() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Performance</h2>
               <div className="flex space-x-2">
-                {['1D', '1W', '1M', '3M', '1Y', 'ALL'].map((timeframe) => (
+                {['1D', '1W', '1M', '3M', '1Y', 'ALL'].map(timeframe => (
                   <button
                     key={timeframe}
                     className={`px-3 py-1 rounded ${
-                      activeTimeframe === timeframe 
-                        ? 'bg-green-500 text-white' 
+                      activeTimeframe === timeframe
+                        ? 'bg-green-500 text-white'
                         : 'bg-[#2D3B4E] text-gray-400'
                     }`}
                     onClick={() => setActiveTimeframe(timeframe)}
@@ -131,31 +154,37 @@ export default function ProgressDashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={performanceData}>
                   <defs>
-                    <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22C55E" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0}/>
+                    <linearGradient
+                      id="portfolioGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#22C55E" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="date" stroke="#64748B" />
                   <YAxis stroke="#64748B" />
-                  <Tooltip 
-                    contentStyle={{ 
+                  <Tooltip
+                    contentStyle={{
                       backgroundColor: '#1E293B',
                       border: '1px solid #22C55E',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
                     }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="portfolioValue" 
-                    stroke="#22C55E" 
+                  <Area
+                    type="monotone"
+                    dataKey="portfolioValue"
+                    stroke="#22C55E"
                     fill="url(#portfolioGradient)"
                     strokeWidth={2}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="returns" 
-                    stroke="#38BDF8" 
+                  <Line
+                    type="monotone"
+                    dataKey="returns"
+                    stroke="#38BDF8"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -186,8 +215,8 @@ export default function ProgressDashboard() {
                 {[
                   { asset: 'BTC/USD', exposure: '30.50%' },
                   { asset: 'ETH/USD', exposure: '20.00%' },
-                  { asset: 'SOL/USD', exposure: '15.00%' }
-                ].map((item) => (
+                  { asset: 'SOL/USD', exposure: '15.00%' },
+                ].map(item => (
                   <div key={item.asset} className="flex justify-between mb-2">
                     <span className="text-gray-400">{item.asset}</span>
                     <span>{item.exposure}</span>
@@ -199,8 +228,8 @@ export default function ProgressDashboard() {
                     <span className="text-yellow-500">65.50%</span>
                   </div>
                   <div className="w-full bg-gray-800 rounded-full h-2">
-                    <div 
-                      className="bg-yellow-500 h-2 rounded-full" 
+                    <div
+                      className="bg-yellow-500 h-2 rounded-full"
                       style={{ width: '65.50%' }}
                     ></div>
                   </div>

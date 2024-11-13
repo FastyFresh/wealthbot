@@ -1,4 +1,3 @@
-
 import { TradingStrategy } from '../services/TradingStrategy';
 
 interface MarketData {
@@ -70,26 +69,26 @@ export class ResearchAgent {
         type: 'bullish',
         confidence: 0.8,
         description: 'Double Bottom',
-        supportingData: []
+        supportingData: [],
       },
       {
         type: 'bearish',
         confidence: 0.8,
         description: 'Double Top',
-        supportingData: []
+        supportingData: [],
       },
       {
         type: 'bullish',
         confidence: 0.7,
         description: 'Golden Cross',
-        supportingData: []
+        supportingData: [],
       },
       {
         type: 'bearish',
         confidence: 0.7,
         description: 'Death Cross',
-        supportingData: []
-      }
+        supportingData: [],
+      },
     ];
   }
 
@@ -100,36 +99,46 @@ export class ResearchAgent {
     const technicalAnalysis = await this.performTechnicalAnalysis(marketData);
     const newsAnalysis = this.analyzeNews(news);
     const patterns = this.identifyPatterns(marketData);
-    const sentiment = this.calculateMarketSentiment(technicalAnalysis, newsAnalysis, patterns);
+    const sentiment = this.calculateMarketSentiment(
+      technicalAnalysis,
+      newsAnalysis,
+      patterns
+    );
 
     const report: ResearchReport = {
       timestamp: Date.now(),
       marketSentiment: sentiment,
       patterns,
-      keyFindings: this.generateKeyFindings(technicalAnalysis, newsAnalysis, patterns),
+      keyFindings: this.generateKeyFindings(
+        technicalAnalysis,
+        newsAnalysis,
+        patterns
+      ),
       recommendations: this.generateRecommendations(sentiment, patterns),
       risks: this.identifyRisks(technicalAnalysis, newsAnalysis),
       technicalAnalysis,
-      newsAnalysis
+      newsAnalysis,
     };
 
     this.historicalReports.push(report);
     return report;
   }
 
-  private async performTechnicalAnalysis(marketData: MarketData[]): Promise<ResearchReport['technicalAnalysis']> {
+  private async performTechnicalAnalysis(
+    marketData: MarketData[]
+  ): Promise<ResearchReport['technicalAnalysis']> {
     const indicators = this.strategy.calculateIndicators(marketData);
     const closes = marketData.map(d => d.close);
-    
+
     // Calculate trend strength using ADX-like method
     const trendStrength = this.calculateTrendStrength(closes);
-    
+
     // Calculate volatility using standard deviation
     const volatility = this.calculateVolatility(closes);
-    
+
     // Calculate momentum using ROC
     const momentum = this.calculateMomentum(closes);
-    
+
     // Calculate support and resistance levels
     const levels = this.calculateSupportResistanceLevels(marketData);
 
@@ -138,15 +147,19 @@ export class ResearchAgent {
       volatility,
       momentum,
       supportLevels: levels.support,
-      resistanceLevels: levels.resistance
+      resistanceLevels: levels.resistance,
     };
   }
 
   private calculateTrendStrength(prices: number[]): number {
     // Simplified ADX calculation
     const changes = prices.slice(1).map((price, i) => price - prices[i]);
-    const positiveSum = changes.filter(change => change > 0).reduce((a, b) => a + b, 0);
-    const negativeSum = Math.abs(changes.filter(change => change < 0).reduce((a, b) => a + b, 0));
+    const positiveSum = changes
+      .filter(change => change > 0)
+      .reduce((a, b) => a + b, 0);
+    const negativeSum = Math.abs(
+      changes.filter(change => change < 0).reduce((a, b) => a + b, 0)
+    );
     return (positiveSum - negativeSum) / (positiveSum + negativeSum);
   }
 
@@ -170,10 +183,12 @@ export class ResearchAgent {
   } {
     const prices = marketData.map(d => d.close);
     const pivotPoints = this.findPivotPoints(prices);
-    
+
     return {
       support: pivotPoints.filter(p => p < prices[prices.length - 1]).slice(-3),
-      resistance: pivotPoints.filter(p => p > prices[prices.length - 1]).slice(0, 3)
+      resistance: pivotPoints
+        .filter(p => p > prices[prices.length - 1])
+        .slice(0, 3),
     };
   }
 
@@ -198,15 +213,16 @@ export class ResearchAgent {
   private analyzeNews(news: NewsItem[]): ResearchReport['newsAnalysis'] {
     const sortedNews = [...news].sort((a, b) => b.relevance - a.relevance);
     const topHeadlines = sortedNews.slice(0, 5);
-    
-    const sentimentScore = news.reduce((acc, item) => acc + item.sentiment, 0) / news.length;
-    
+
+    const sentimentScore =
+      news.reduce((acc, item) => acc + item.sentiment, 0) / news.length;
+
     const keyTopics = this.extractKeyTopics(news);
 
     return {
       topHeadlines,
       sentimentScore,
-      keyTopics
+      keyTopics,
     };
   }
 
@@ -218,7 +234,7 @@ export class ResearchAgent {
       .toLowerCase()
       .split(/\W+/)
       .filter(word => word.length > 3);
-    
+
     const frequency: { [key: string]: number } = {};
     keywords.forEach(word => {
       frequency[word] = (frequency[word] || 0) + 1;
@@ -235,11 +251,14 @@ export class ResearchAgent {
       .filter(pattern => this.matchPattern(pattern, marketData))
       .map(pattern => ({
         ...pattern,
-        supportingData: this.extractPatternData(pattern, marketData)
+        supportingData: this.extractPatternData(pattern, marketData),
       }));
   }
 
-  private matchPattern(pattern: MarketPattern, marketData: MarketData[]): boolean {
+  private matchPattern(
+    pattern: MarketPattern,
+    marketData: MarketData[]
+  ): boolean {
     // Pattern matching logic based on pattern type
     const prices = marketData.map(d => d.close);
     switch (pattern.description) {
@@ -277,32 +296,41 @@ export class ResearchAgent {
   private detectGoldenCross(prices: number[]): boolean {
     const ma50 = this.calculateMA(prices, 50);
     const ma200 = this.calculateMA(prices, 200);
-    return ma50[ma50.length - 1] > ma200[ma200.length - 1] &&
-           ma50[ma50.length - 2] <= ma200[ma200.length - 2];
+    return (
+      ma50[ma50.length - 1] > ma200[ma200.length - 1] &&
+      ma50[ma50.length - 2] <= ma200[ma200.length - 2]
+    );
   }
 
   private detectDeathCross(prices: number[]): boolean {
     const ma50 = this.calculateMA(prices, 50);
     const ma200 = this.calculateMA(prices, 200);
-    return ma50[ma50.length - 1] < ma200[ma200.length - 1] &&
-           ma50[ma50.length - 2] >= ma200[ma200.length - 2];
+    return (
+      ma50[ma50.length - 1] < ma200[ma200.length - 1] &&
+      ma50[ma50.length - 2] >= ma200[ma200.length - 2]
+    );
   }
 
   private calculateMA(prices: number[], period: number): number[] {
     const result: number[] = [];
     for (let i = period - 1; i < prices.length; i++) {
-      const sum = prices.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+      const sum = prices
+        .slice(i - period + 1, i + 1)
+        .reduce((a, b) => a + b, 0);
       result.push(sum / period);
     }
     return result;
   }
 
-  private extractPatternData(pattern: MarketPattern, marketData: MarketData[]): any[] {
+  private extractPatternData(
+    pattern: MarketPattern,
+    marketData: MarketData[]
+  ): any[] {
     // Extract relevant data points for pattern visualization
     return marketData.slice(-20).map(d => ({
       timestamp: d.timestamp,
       price: d.close,
-      volume: d.volume
+      volume: d.volume,
     }));
   }
 
@@ -311,26 +339,32 @@ export class ResearchAgent {
     news: ResearchReport['newsAnalysis'],
     patterns: MarketPattern[]
   ): ResearchReport['marketSentiment'] {
-    const technicalScore = (
-      technical.trendStrength +
-      Math.min(technical.momentum, 1) +
-      (1 - Math.min(technical.volatility, 1))
-    ) / 3;
+    const technicalScore =
+      (technical.trendStrength +
+        Math.min(technical.momentum, 1) +
+        (1 - Math.min(technical.volatility, 1))) /
+      3;
 
     const fundamentalScore = 0.5; // Placeholder for fundamental analysis
 
     const newsScore = news.sentimentScore;
 
-    const patternScore = patterns.reduce(
-      (acc, pattern) => acc + (pattern.type === 'bullish' ? pattern.confidence : -pattern.confidence),
-      0
-    ) / Math.max(patterns.length, 1);
+    const patternScore =
+      patterns.reduce(
+        (acc, pattern) =>
+          acc +
+          (pattern.type === 'bullish'
+            ? pattern.confidence
+            : -pattern.confidence),
+        0
+      ) / Math.max(patterns.length, 1);
 
     return {
-      overall: (technicalScore + fundamentalScore + newsScore + patternScore) / 4,
+      overall:
+        (technicalScore + fundamentalScore + newsScore + patternScore) / 4,
       technical: technicalScore,
       fundamental: fundamentalScore,
-      news: newsScore
+      news: newsScore,
     };
   }
 
@@ -354,7 +388,9 @@ export class ResearchAgent {
 
     // Pattern findings
     patterns.forEach(pattern => {
-      findings.push(`${pattern.description} pattern detected with ${pattern.confidence * 100}% confidence`);
+      findings.push(
+        `${pattern.description} pattern detected with ${pattern.confidence * 100}% confidence`
+      );
     });
 
     // News findings

@@ -1,0 +1,15 @@
+build/
+dist/
+node_modules/
+.next/
+*.sol
+*.anchor
+frontend/build/
+frontend/dist/
+frontend/node_modules/
+public/
+coverage/
+.cargo/
+target/
+**/*.rs
+**/*.so

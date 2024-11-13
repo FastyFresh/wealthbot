@@ -1,7 +1,21 @@
 {
-    "editor.quickSuggestions": {
-        "comments": "off",
-        "strings": "off",
-        "other": "off"
-    }
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "prettier.requireConfig": true,
+  "prettier.useEditorConfig": false,
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "solidity.packageDefaultDependenciesContractsDirectory": "src/contracts",
+  "solidity.packageDefaultDependenciesDirectory": "node_modules",
+  "solana.commandPath": "solana",
+  "solana.network": "devnet",
+  "solana.defaultProgram": "program"
 }

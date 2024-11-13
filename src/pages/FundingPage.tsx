@@ -59,7 +59,7 @@ export default function FundingPage() {
           {/* Funding Form */}
           <div className="bg-[#1E293B] rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-6">Fund Your Account</h2>
-            
+
             {/* Minimum Requirements */}
             <div className="bg-[#0F172A] rounded-lg p-4 mb-6">
               <div className="flex items-start space-x-3">
@@ -84,7 +84,7 @@ export default function FundingPage() {
                 <input
                   type="number"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={e => setAmount(e.target.value)}
                   min="100"
                   step="1"
                   className="w-full bg-[#0F172A] border border-gray-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#38BDF8] focus:border-transparent"
