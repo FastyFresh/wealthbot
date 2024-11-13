@@ -1,3 +1,4 @@
+
 services:
   frontend-dev:
     build:
@@ -7,15 +8,18 @@ services:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "3001:3001"
+      - "3005:3005"
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:8080
-    command: npm run dev -- --host --port 3001
+      - VITE_SOLANA_NETWORK=devnet
+      - VITE_DRIFT_PROGRAM_ID=dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH
+      - VITE_SOLANA_RPC_URL=https://api.devnet.solana.com
+    command: npm run dev -- --host --port 3005
     networks:
       - wealthbot-network
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3001"]
+      test: ["CMD", "wget", "--spider", "http://localhost:3005"]
       interval: 10s
       timeout: 5s
       retries: 3

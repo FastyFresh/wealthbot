@@ -1,265 +1,186 @@
+import { BN } from '@drift-labs/sdk';
+import { DriftService } from './DriftService';
 
-import * as tf from '@tensorflow/tfjs';
-import { RSI, BollingerBands } from 'technicalindicators';
-import { GoalTrackingService } from './GoalTrackingService';
+export type PositionDirection = 'long' | 'short';
 
-interface MarketData {
-    timestamp: number;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    volume: number;
+export interface TradingStrategy {
+  asset: 'SOL-PERP';
+  indicators: {
+    funding: boolean;    // Monitor funding rates
+    momentum: boolean;   // Price momentum
+    volatility: boolean; // Risk management
+  };
+  position: {
+    size: number;       // Based on account size
+    leverage: number;   // Dynamic 1x-20x
+    direction: PositionDirection;
+  };
 }
 
-interface PredictionResult {
-    predictedPrice: number;
-    confidence: number;
-    volatility: number;
-    trend: 'bullish' | 'bearish' | 'neutral';
+export interface StrategyParameters {
+  minPositionSize: number;
+  maxPositionSize: number;
+  defaultLeverage: number;
+  maxLeverage: number;
+  fundingRateThreshold: number;
+  volatilityThreshold: number;
+  momentumPeriod: number;
+  stopLossPercentage: number;
+  takeProfitPercentage: number;
 }
 
-export class TradingStrategy {
-    private model: tf.Sequential | null = null;
-    private baseUrl = 'https://api.binance.com/api/v3';
-    private goalTracker: GoalTrackingService;
-    private recentDailyReturns: number[] = [];
-    private startDate: number;
-    
-    constructor(initialDeposit: number) {
-        this.goalTracker = new GoalTrackingService(initialDeposit);
-        this.startDate = Date.now();
-        this.initialize();
+export class SOLPerpetualStrategy implements TradingStrategy {
+  public asset: 'SOL-PERP' = 'SOL-PERP';
+  public indicators = {
+    funding: true,
+    momentum: true,
+    volatility: true
+  };
+  public position = {
+    size: 0,
+    leverage: 2,
+    direction: 'long' as PositionDirection
+  };
+
+  private priceHistory: number[] = [];
+  private fundingRateHistory: number[] = [];
+  private lastUpdate: number = 0;
+  private readonly updateInterval = 60000; // 1 minute
+
+  constructor(
+    private driftService: DriftService,
+    private params: StrategyParameters = {
+      minPositionSize: 0.1,
+      maxPositionSize: 10,
+      defaultLeverage: 2,
+      maxLeverage: 20,
+      fundingRateThreshold: 0.01, // 1% funding rate threshold
+      volatilityThreshold: 0.02,  // 2% volatility threshold
+      momentumPeriod: 12,         // 12 data points for momentum
+      stopLossPercentage: 5,      // 5% stop loss
+      takeProfitPercentage: 15    // 15% take profit
+    }
+  ) {}
+
+  async initialize(): Promise<void> {
+    await this.updateMarketData();
+  }
+
+  private async updateMarketData(): Promise<void> {
+    const currentTime = Date.now();
+    if (currentTime - this.lastUpdate < this.updateInterval) {
+      return;
     }
 
-    async initialize() {
-        // Create a simple LSTM model for price prediction
-        this.model = tf.sequential({
-            layers: [
-                tf.layers.lstm({
-                    units: 50,
-                    returnSequences: true,
-                    inputShape: [30, 5] // 30 days of 5 features (OHLCV)
-                }),
-                tf.layers.dropout({
-                    rate: 0.2
-                }),
-                tf.layers.lstm({
-                    units: 50,
-                    returnSequences: false
-                }),
-                tf.layers.dense({
-                    units: 1
-                })
-            ]
-        });
+    try {
+      const [price, fundingRate] = await Promise.all([
+        this.driftService.getMarketPrice(),
+        this.driftService.getFundingRate()
+      ]);
 
-        this.model.compile({
-            optimizer: tf.train.adam(0.001),
-            loss: 'meanSquaredError'
-        });
+      this.priceHistory.push(price);
+      this.fundingRateHistory.push(fundingRate);
+
+      // Keep last 24 hours of data (assuming 1-minute intervals)
+      if (this.priceHistory.length > 1440) {
+        this.priceHistory.shift();
+        this.fundingRateHistory.shift();
+      }
+
+      this.lastUpdate = currentTime;
+    } catch (error) {
+      console.error('Error updating market data:', error);
+      throw error;
+    }
+  }
+
+  private calculateVolatility(): number {
+    if (this.priceHistory.length < 2) return 0;
+
+    const returns = [];
+    for (let i = 1; i < this.priceHistory.length; i++) {
+      const returnValue = (this.priceHistory[i] - this.priceHistory[i - 1]) / this.priceHistory[i - 1];
+      returns.push(returnValue);
     }
 
-    async fetchMarketData(symbol: string, interval: string = '1d', limit: number = 1000): Promise<MarketData[]> {
-        try {
-            const response = await fetch(
-                `${this.baseUrl}/klines?symbol=${symbol.replace('/', '')}&interval=${interval}&limit=${limit}`
-            );
-            
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
+    return Math.sqrt(variance);
+  }
 
-            const data = await response.json();
-            
-            return data.map((candle: any[]) => ({
-                timestamp: candle[0],
-                open: parseFloat(candle[1]),
-                high: parseFloat(candle[2]),
-                low: parseFloat(candle[3]),
-                close: parseFloat(candle[4]),
-                volume: parseFloat(candle[5])
-            }));
-        } catch (error) {
-            console.error('Error fetching market data:', error);
-            throw error;
-        }
+  private calculateMomentum(): number {
+    if (this.priceHistory.length < this.params.momentumPeriod) return 0;
+
+    const recentPrices = this.priceHistory.slice(-this.params.momentumPeriod);
+    const oldPrice = recentPrices[0];
+    const currentPrice = recentPrices[recentPrices.length - 1];
+    return (currentPrice - oldPrice) / oldPrice;
+  }
+
+  private getAverageFundingRate(): number {
+    if (this.fundingRateHistory.length === 0) return 0;
+    return this.fundingRateHistory.reduce((a, b) => a + b, 0) / this.fundingRateHistory.length;
+  }
+
+  async evaluatePosition(): Promise<void> {
+    await this.updateMarketData();
+
+    const volatility = this.calculateVolatility();
+    const momentum = this.calculateMomentum();
+    const avgFundingRate = this.getAverageFundingRate();
+
+    // Determine position direction
+    const newDirection: PositionDirection = 
+      momentum > 0 && avgFundingRate < this.params.fundingRateThreshold
+        ? 'long'
+        : 'short';
+    this.position.direction = newDirection;
+
+    // Adjust position size based on volatility
+    const volatilityAdjustment = Math.max(0, 1 - volatility / this.params.volatilityThreshold);
+    const baseSize = (this.params.maxPositionSize - this.params.minPositionSize) / 2;
+    this.position.size = this.params.minPositionSize + (baseSize * volatilityAdjustment);
+
+    // Adjust leverage based on volatility and momentum
+    const momentumStrength = Math.abs(momentum);
+    const leverageAdjustment = Math.min(
+      this.params.maxLeverage,
+      this.params.defaultLeverage + (momentumStrength * 10)
+    );
+    this.position.leverage = Math.max(1, Math.min(leverageAdjustment, this.params.maxLeverage));
+  }
+
+  async executeStrategy(): Promise<string> {
+    await this.evaluatePosition();
+
+    try {
+      // Close existing position if direction changes
+      const currentPosition = await this.driftService.getPositionMetrics(0);
+      if (currentPosition && currentPosition.direction !== this.position.direction) {
+        await this.driftService.closePosition(0);
+      }
+
+      // Open new position
+      return await this.driftService.openPosition(
+        this.position.size,
+        this.position.leverage,
+        this.position.direction
+      );
+    } catch (error) {
+      console.error('Error executing strategy:', error);
+      throw error;
     }
+  }
 
-    calculateIndicators(data: MarketData[]) {
-        const closes = data.map(d => d.close);
-        const highs = data.map(d => d.high);
-        const lows = data.map(d => d.low);
+  getStrategyState(): TradingStrategy {
+    return {
+      asset: this.asset,
+      indicators: { ...this.indicators },
+      position: { ...this.position }
+    };
+  }
 
-        const rsi = RSI.calculate({
-            values: closes,
-            period: 14
-        });
-
-        // Calculate MACD manually since the library types are incorrect
-        const ema12 = this.calculateEMA(closes, 12);
-        const ema26 = this.calculateEMA(closes, 26);
-        const macdLine = ema12.map((value, index) => value - ema26[index]);
-        const signalLine = this.calculateEMA(macdLine, 9);
-        const histogram = macdLine.map((value, index) => value - signalLine[index]);
-
-        const macd = {
-            MACD: macdLine,
-            signal: signalLine,
-            histogram: histogram
-        };
-
-        const bb = BollingerBands.calculate({
-            values: closes,
-            period: 20,
-            stdDev: 2
-        });
-
-        return {
-            rsi,
-            macd,
-            bollinger: bb
-        };
-    }
-
-    private calculateEMA(data: number[], period: number): number[] {
-        const k = 2 / (period + 1);
-        const ema = [data[0]];
-        
-        for (let i = 1; i < data.length; i++) {
-            ema.push(data[i] * k + ema[i - 1] * (1 - k));
-        }
-        
-        return ema;
-    }
-
-    private calculateVolatility(data: MarketData[], window: number = 20): number {
-        const returns = data.slice(-window).map((d, i, arr) => 
-            i === 0 ? 0 : (d.close - arr[i-1].close) / arr[i-1].close
-        );
-        
-        const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
-        const squaredDiffs = returns.map(r => Math.pow(r - mean, 2));
-        return Math.sqrt(squaredDiffs.reduce((a, b) => a + b, 0) / returns.length);
-    }
-
-    async trainModel(data: MarketData[]) {
-        const windowSize = 30;
-        const features = this.prepareFeatures(data);
-        const labels = this.prepareLabels(data);
-
-        // Convert to tensors
-        const xs = tf.tensor3d(features);
-        const ys = tf.tensor2d(labels);
-
-        // Train the model
-        await this.model?.fit(xs, ys, {
-            epochs: 50,
-            batchSize: 32,
-            validationSplit: 0.1,
-            callbacks: {
-                onEpochEnd: (epoch, logs) => {
-                    console.log(`Epoch ${epoch}: loss = ${logs?.loss}`);
-                }
-            }
-        });
-
-        // Clean up tensors
-        xs.dispose();
-        ys.dispose();
-    }
-
-    private prepareFeatures(data: MarketData[]) {
-        const features = [];
-        const windowSize = 30;
-
-        for (let i = windowSize; i < data.length; i++) {
-            const window = data.slice(i - windowSize, i).map(d => [
-                d.open,
-                d.high,
-                d.low,
-                d.close,
-                d.volume
-            ]);
-            features.push(window);
-        }
-
-        return features;
-    }
-
-    private prepareLabels(data: MarketData[]) {
-        const labels = [];
-        const windowSize = 30;
-
-        for (let i = windowSize; i < data.length; i++) {
-            labels.push([data[i].close]);
-        }
-
-        return labels;
-    }
-
-    async predict(data: MarketData[]): Promise<PredictionResult> {
-        if (!this.model) {
-            throw new Error('Model not initialized');
-        }
-
-        const features = this.prepareFeatures(data.slice(-31, -1));
-        const xs = tf.tensor3d([features[0]]);
-        const prediction = this.model.predict(xs) as tf.Tensor;
-        const predictedPrice = prediction.dataSync()[0];
-        
-        // Calculate prediction confidence and trend
-        const currentPrice = data[data.length - 1].close;
-        const priceChange = (predictedPrice - currentPrice) / currentPrice;
-        const volatility = this.calculateVolatility(data);
-        
-        // Determine trend and confidence
-        const trend = priceChange > 0.02 ? 'bullish' : 
-                     priceChange < -0.02 ? 'bearish' : 
-                     'neutral';
-        
-        const confidence = Math.min(
-            Math.abs(priceChange) / volatility,
-            1
-        );
-
-        // Update daily returns for goal tracking
-        if (data.length >= 2) {
-            const dailyReturn = (data[data.length - 1].close - data[data.length - 2].close) / 
-                               data[data.length - 2].close;
-            this.recentDailyReturns.push(dailyReturn);
-            if (this.recentDailyReturns.length > 30) {
-                this.recentDailyReturns.shift();
-            }
-        }
-        
-        // Clean up tensors
-        xs.dispose();
-        prediction.dispose();
-        
-        return {
-            predictedPrice,
-            confidence,
-            volatility,
-            trend
-        };
-    }
-
-    public getGoalProgress(currentValue: number): string {
-        const daysElapsed = Math.floor((Date.now() - this.startDate) / (1000 * 60 * 60 * 24));
-        const metrics = this.goalTracker.calculateProgress(
-            currentValue,
-            daysElapsed,
-            this.recentDailyReturns
-        );
-        return this.goalTracker.getProgressSummary(metrics);
-    }
-
-    public calculatePositionSize(currentValue: number, prediction: PredictionResult): number {
-        return this.goalTracker.suggestPositionSize(
-            currentValue,
-            prediction.volatility,
-            prediction.confidence
-        );
-    }
+  getParameters(): StrategyParameters {
+    return { ...this.params };
+  }
 }

@@ -1,110 +1,195 @@
+import { Connection, PublicKey } from '@solana/web3.js';
+import { DriftService } from '../services/DriftService';
+import { SOLPerpetualStrategy, StrategyParameters, TradingStrategy } from '../services/TradingStrategy';
 
-import { TradingStrategy } from '../services/TradingStrategy';
-
-interface TradingDecision {
-  action: 'buy' | 'sell' | 'hold';
-  amount?: number;
-  price?: number;
-  confidence: number;
-}
-
-interface MarketData {
-  timestamp: number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
+export interface AgentConfig {
+  checkInterval: number;  // Milliseconds between strategy checks
+  maxDrawdown: number;    // Maximum allowed drawdown percentage
+  riskLimit: number;      // Maximum position size as percentage of portfolio
+  autoRebalance: boolean; // Whether to automatically rebalance positions
 }
 
 export class TradingAgent {
-  private strategy: TradingStrategy;
-  private lastDecision: TradingDecision | null = null;
+  private strategy: SOLPerpetualStrategy;
+  private driftService: DriftService;
+  private isRunning: boolean = false;
+  private checkIntervalId: NodeJS.Timeout | null = null;
+  private lastExecutionTime: number = 0;
 
-  constructor(strategy: TradingStrategy) {
-    this.strategy = strategy;
+  constructor(
+    connection: Connection,
+    private userPublicKey: PublicKey,
+    private strategyParams?: StrategyParameters,
+    private config: AgentConfig = {
+      checkInterval: 60000, // 1 minute
+      maxDrawdown: 8.50,   // 8.50% max drawdown
+      riskLimit: 50,       // 50% max portfolio allocation
+      autoRebalance: true
+    }
+  ) {
+    this.driftService = new DriftService(connection);
+    this.strategy = new SOLPerpetualStrategy(this.driftService, strategyParams);
   }
 
-  public async analyzeTrade(marketData: MarketData[]): Promise<TradingDecision> {
+  async initialize(): Promise<void> {
     try {
-      // Calculate technical indicators
-      const indicators = this.strategy.calculateIndicators(marketData);
-      
-      // Get prediction from the model
-      await this.strategy.trainModel(marketData);
-      const predictedPrice = await this.strategy.predict(marketData);
-      
-      // Basic decision-making logic based on indicators and prediction
-      const decision: TradingDecision = {
-        action: 'hold',
-        confidence: 0
-      };
-
-      const currentPrice = marketData[marketData.length - 1].close;
-      const rsi = indicators.rsi[indicators.rsi.length - 1];
-      const macd = indicators.macd.MACD[indicators.macd.MACD.length - 1];
-      const signal = indicators.macd.signal[indicators.macd.signal.length - 1];
-
-      // RSI-based decisions
-      if (rsi < 30) {
-        decision.action = 'buy';
-        decision.confidence = 0.7;
-      } else if (rsi > 70) {
-        decision.action = 'sell';
-        decision.confidence = 0.7;
-      }
-
-      // MACD crossover
-      if (macd > signal && decision.action === 'hold') {
-        decision.action = 'buy';
-        decision.confidence = 0.6;
-      } else if (macd < signal && decision.action === 'hold') {
-        decision.action = 'sell';
-        decision.confidence = 0.6;
-      }
-
-      // Price prediction influence
-      const priceChange = (predictedPrice - currentPrice) / currentPrice;
-      if (Math.abs(priceChange) > 0.02) { // 2% threshold
-        if (priceChange > 0 && decision.action !== 'sell') {
-          decision.action = 'buy';
-          decision.confidence = Math.max(decision.confidence, 0.8);
-        } else if (priceChange < 0 && decision.action !== 'buy') {
-          decision.action = 'sell';
-          decision.confidence = Math.max(decision.confidence, 0.8);
-        }
-      }
-
-      if (decision.action !== 'hold') {
-        decision.price = currentPrice;
-        decision.amount = this.calculateTradeAmount(marketData, decision.confidence);
-      }
-
-      this.lastDecision = decision;
-      return decision;
+      await this.driftService.initialize(this.userPublicKey);
+      await this.strategy.initialize();
+      console.log('Trading agent initialized successfully');
     } catch (error) {
-      console.error('Error in trade analysis:', error);
-      return {
-        action: 'hold',
-        confidence: 0
-      };
+      console.error('Error initializing trading agent:', error);
+      throw error;
     }
   }
 
-  private calculateTradeAmount(marketData: MarketData[], confidence: number): number {
-    // Implement position sizing logic based on:
-    // - Available capital (assumed to be 100000 for this example)
-    // - Risk tolerance
-    // - Market volatility
-    // - Analysis confidence
-    const availableCapital = 100000; // Example value
-    const baseAmount = availableCapital * 0.1; // Use 10% of available capital
-    const riskAdjustedAmount = baseAmount * confidence;
-    
-    return Math.min(riskAdjustedAmount, availableCapital);
+  async start(): Promise<void> {
+    if (this.isRunning) {
+      console.log('Trading agent is already running');
+      return;
+    }
+
+    try {
+      await this.initialize();
+      this.isRunning = true;
+      this.checkIntervalId = setInterval(
+        () => this.executeTradeLoop(),
+        this.config.checkInterval
+      );
+      console.log('Trading agent started successfully');
+    } catch (error) {
+      console.error('Error starting trading agent:', error);
+      this.stop();
+      throw error;
+    }
   }
 
-  public getLastDecision(): TradingDecision | null {
-    return this.lastDecision;
+  stop(): void {
+    if (this.checkIntervalId) {
+      clearInterval(this.checkIntervalId);
+      this.checkIntervalId = null;
+    }
+    this.isRunning = false;
+    console.log('Trading agent stopped');
+  }
+
+  private async executeTradeLoop(): Promise<void> {
+    const currentTime = Date.now();
+    if (currentTime - this.lastExecutionTime < this.config.checkInterval) {
+      return;
+    }
+
+    try {
+      // Check if we need to rebalance based on drawdown
+      if (this.config.autoRebalance) {
+        await this.checkAndRebalance();
+      }
+
+      // Execute strategy
+      const tx = await this.strategy.executeStrategy();
+      console.log('Strategy execution completed:', tx);
+
+      this.lastExecutionTime = currentTime;
+    } catch (error) {
+      console.error('Error in trade execution loop:', error);
+      // Don't stop the agent on execution error, just log it
+    }
+  }
+
+  private async checkAndRebalance(): Promise<void> {
+    try {
+      const position = await this.driftService.getPositionMetrics(0);
+      if (!position) return;
+
+      // Check drawdown
+      const drawdown = this.calculateDrawdown(position.pnl, position.size * position.leverage);
+      if (drawdown > this.config.maxDrawdown) {
+        console.log(`Drawdown limit exceeded (${drawdown.toFixed(2)}%). Reducing position...`);
+        await this.reducePosition(position);
+      }
+
+      // Check risk limit
+      const riskExposure = await this.calculateRiskExposure(position.size, position.leverage);
+      if (riskExposure > this.config.riskLimit) {
+        console.log(`Risk limit exceeded (${riskExposure.toFixed(2)}%). Adjusting position...`);
+        await this.adjustRisk(position);
+      }
+    } catch (error) {
+      console.error('Error in rebalancing check:', error);
+    }
+  }
+
+  private calculateDrawdown(pnl: number, positionValue: number): number {
+    if (positionValue === 0) return 0;
+    return Math.abs((pnl / positionValue) * 100);
+  }
+
+  private async calculateRiskExposure(size: number, leverage: number): Promise<number> {
+    const portfolioValue = await this.getTotalPortfolioValue();
+    if (portfolioValue === 0) return 0;
+    return (size * leverage * 100) / portfolioValue;
+  }
+
+  private async getTotalPortfolioValue(): Promise<number> {
+    try {
+      const position = await this.driftService.getPositionMetrics(0);
+      if (!position) return 0;
+      const price = await this.driftService.getMarketPrice();
+      return position.size * price;
+    } catch (error) {
+      console.error('Error getting portfolio value:', error);
+      return 0;
+    }
+  }
+
+  private async reducePosition(position: {
+    size: number;
+    leverage: number;
+    direction: 'long' | 'short';
+  }): Promise<void> {
+    try {
+      // Reduce position size by 50%
+      const newSize = position.size * 0.5;
+      await this.driftService.openPosition(
+        newSize,
+        position.leverage,
+        position.direction
+      );
+      console.log('Position size reduced successfully');
+    } catch (error) {
+      console.error('Error reducing position:', error);
+      throw error;
+    }
+  }
+
+  private async adjustRisk(position: {
+    size: number;
+    leverage: number;
+    direction: 'long' | 'short';
+  }): Promise<void> {
+    try {
+      // Reduce leverage to meet risk limit
+      const newLeverage = Math.max(1, position.leverage * 0.75);
+      await this.driftService.adjustLeverage(0, newLeverage);
+      console.log('Position risk adjusted successfully');
+    } catch (error) {
+      console.error('Error adjusting risk:', error);
+      throw error;
+    }
+  }
+
+  getStrategyState(): TradingStrategy {
+    return this.strategy.getStrategyState();
+  }
+
+  getStrategyParameters(): StrategyParameters {
+    return this.strategy.getParameters();
+  }
+
+  getAgentConfig(): AgentConfig {
+    return { ...this.config };
+  }
+
+  isActive(): boolean {
+    return this.isRunning;
   }
 }
