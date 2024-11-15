@@ -1,85 +1,143 @@
+import { render, screen, fireEvent } from '@testing-library/react';
+import { WalletConnect } from './WalletConnect';
+import type {} from '../../types/test-types';
 
-import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
-import { WalletConnect } from './WalletConnect'
-import { useWallet } from '../../providers/WalletProvider'
+// Create mock functions
+const mockDisconnect = jest.fn();
+const mockConnect = jest.fn();
+const mockSignTransaction = jest.fn();
+const mockSignAllTransactions = jest.fn();
+const mockSignMessage = jest.fn();
+const mockOn = jest.fn();
+const mockRemoveListener = jest.fn();
 
-// Mock the useWallet hook
-vi.mock('../../providers/WalletProvider', () => ({
-  useWallet: vi.fn()
-}))
+// Mock window.alert
+window.alert = jest.fn();
+
+// Create mock Solana provider
+const mockSolana: PhantomProvider = {
+    publicKey: null,
+    isConnected: false,
+    networkVersion: 'devnet',
+    signTransaction: mockSignTransaction,
+    signAllTransactions: mockSignAllTransactions,
+    signMessage: mockSignMessage,
+    connect: mockConnect,
+    disconnect: mockDisconnect,
+    on: mockOn,
+    removeListener: mockRemoveListener
+};
+
+// Mock the wallet adapter module
+jest.mock('@solana/wallet-adapter-react', () => ({
+    useWallet: jest.fn(),
+    useConnection: jest.fn(() => ({
+        connection: null
+    }))
+}));
+
+// Get the mocked module
+const { useWallet } = jest.requireMock('@solana/wallet-adapter-react');
 
 describe('WalletConnect', () => {
-  it('renders disconnected state correctly', () => {
-    vi.mocked(useWallet).mockReturnValue({
-      connected: false,
-      error: null,
-      connect: vi.fn(),
-      disconnect: vi.fn()
-    })
+    beforeEach(() => {
+        // Reset all mocks before each test
+        jest.clearAllMocks();
+        
+        // Default wallet state
+        useWallet.mockReturnValue({
+            connected: false,
+            connecting: false,
+            disconnect: mockDisconnect,
+            connect: mockConnect,
+            publicKey: null
+        });
 
-    render(<WalletConnect />)
-    
-    expect(screen.getByText('Disconnected')).toBeInTheDocument()
-    expect(screen.getByRole('button')).toHaveTextContent('Connect Wallet')
-  })
+        // Set up window.solana before each test
+        window.solana = {
+            ...mockSolana,
+            networkVersion: 'devnet',
+            isConnected: false,
+            publicKey: null
+        };
+    });
 
-  it('renders connected state correctly', () => {
-    vi.mocked(useWallet).mockReturnValue({
-      connected: true,
-      error: null,
-      connect: vi.fn(),
-      disconnect: vi.fn()
-    })
+    afterEach(() => {
+        // Clean up
+        jest.clearAllMocks();
+        delete window.solana;
+    });
 
-    render(<WalletConnect />)
-    
-    expect(screen.getByText('Connected')).toBeInTheDocument()
-    expect(screen.getByRole('button')).toHaveTextContent('Disconnect')
-  })
+    it('renders wallet connection component', () => {
+        render(<WalletConnect />);
+        expect(screen.getByRole('button', { name: /Connect Wallet/i })).toBeInTheDocument();
+        expect(screen.getByText('Disconnected')).toBeInTheDocument();
+    });
 
-  it('displays error message when error exists', () => {
-    const errorMessage = 'Failed to connect wallet'
-    vi.mocked(useWallet).mockReturnValue({
-      connected: false,
-      error: errorMessage,
-      connect: vi.fn(),
-      disconnect: vi.fn()
-    })
+    it('shows connected status when wallet is connected', () => {
+        useWallet.mockReturnValue({
+            connected: true,
+            connecting: false,
+            disconnect: mockDisconnect,
+            connect: mockConnect,
+            publicKey: 'mock-public-key'
+        });
 
-    render(<WalletConnect />)
-    
-    expect(screen.getByText(errorMessage)).toBeInTheDocument()
-  })
+        render(<WalletConnect />);
+        expect(screen.getByText('Connected')).toBeInTheDocument();
+    });
 
-  it('calls connect when clicking connect button', () => {
-    const connectMock = vi.fn()
-    vi.mocked(useWallet).mockReturnValue({
-      connected: false,
-      error: null,
-      connect: connectMock,
-      disconnect: vi.fn()
-    })
+    it('shows connecting status', () => {
+        useWallet.mockReturnValue({
+            connected: false,
+            connecting: true,
+            disconnect: mockDisconnect,
+            connect: mockConnect,
+            publicKey: null
+        });
 
-    render(<WalletConnect />)
-    
-    fireEvent.click(screen.getByRole('button'))
-    expect(connectMock).toHaveBeenCalled()
-  })
+        render(<WalletConnect />);
+        expect(screen.getByText('Connecting...')).toBeInTheDocument();
+    });
 
-  it('calls disconnect when clicking disconnect button', () => {
-    const disconnectMock = vi.fn()
-    vi.mocked(useWallet).mockReturnValue({
-      connected: true,
-      error: null,
-      connect: vi.fn(),
-      disconnect: disconnectMock
-    })
+    it('handles disconnection', async () => {
+        useWallet.mockReturnValue({
+            connected: true,
+            connecting: false,
+            disconnect: mockDisconnect,
+            connect: mockConnect,
+            publicKey: 'mock-public-key'
+        });
 
-    render(<WalletConnect />)
-    
-    fireEvent.click(screen.getByRole('button'))
-    expect(disconnectMock).toHaveBeenCalled()
-  })
-})
+        render(<WalletConnect />);
+        const disconnectButton = screen.getByRole('button', { name: /Disconnect/i });
+        await fireEvent.click(disconnectButton);
+        expect(mockDisconnect).toHaveBeenCalled();
+    });
+
+    it('handles connection', async () => {
+        mockConnect.mockResolvedValueOnce(undefined);
+        
+        render(<WalletConnect />);
+        const connectButton = screen.getByRole('button', { name: /Connect Wallet/i });
+        await fireEvent.click(connectButton);
+        
+        expect(mockConnect).toHaveBeenCalled();
+    });
+
+    it('shows alert when not on devnet', async () => {
+        window.solana = {
+            ...mockSolana,
+            networkVersion: 'mainnet',
+            isConnected: false,
+            publicKey: null
+        };
+
+        render(<WalletConnect />);
+        const connectButton = screen.getByRole('button', { name: /Connect Wallet/i });
+        await fireEvent.click(connectButton);
+
+        expect(window.alert).toHaveBeenCalledWith('Please switch to Devnet network in your Phantom wallet');
+        expect(mockConnect).not.toHaveBeenCalled();
+    });
+});

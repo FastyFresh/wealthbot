@@ -1,5 +1,7 @@
+/// <reference types="jest" />
+
 declare global {
-    interface TestPhantomProvider {
+    interface PhantomProvider {
         publicKey: string | null;
         isConnected: boolean;
         networkVersion: string;
@@ -13,7 +15,7 @@ declare global {
     }
 
     interface Window {
-        solana?: TestPhantomProvider;
+        solana?: PhantomProvider;
     }
 }
 

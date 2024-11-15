@@ -1,106 +1,81 @@
-import React, { useEffect, useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { ErrorBoundary } from '../common/ErrorBoundary';
-import type { TradingStrategy } from '../../types/trading-strategy';
-import { SOLPerpetualStrategy } from '../../services/TradingStrategy';
-import { DriftService } from '../../services/DriftService';
-
-interface LoadingSpinnerProps {
-  className?: string;
-}
-
-function LoadingSpinner(props: LoadingSpinnerProps): JSX.Element {
-  const { className = '' } = props;
-  return (
-    <div className={`flex justify-center items-center h-64 ${className}`}>
-      <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-    </div>
-  );
-}
-
-interface ErrorDisplayProps {
-  error: string;
-  onRetry: () => void;
-}
-
-function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
-  const { error, onRetry } = props;
-  return (
-    <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-      <strong className="font-bold">Error: </strong>
-      <span className="block sm:inline">{error}</span>
-      <button onClick={onRetry} className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-        Retry
-      </button>
-    </div>
-  );
-}
-
-interface DashboardContentProps {
-  className?: string;
-}
-
-function DashboardContent(props: DashboardContentProps): JSX.Element {
-  const { className = '' } = props;
-  const { connected, publicKey } = useWallet();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [strategy, setStrategy] = useState<SOLPerpetualStrategy | null>(null);
-  const [strategyState, setStrategyState] = useState<TradingStrategy | null>(null);
-
-  useEffect(() => {
-    const initializeStrategy = async () => {
-      if (!connected || !publicKey) {
-        setError('Please connect your wallet first');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const driftService = new DriftService();
-        const newStrategy = new SOLPerpetualStrategy(driftService);
-        await newStrategy.initialize();
-        setStrategy(newStrategy);
-        setStrategyState(newStrategy.getStrategyState());
-        setLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to initialize trading strategy');
-        setLoading(false);
-      }
-    };
-
-    initializeStrategy();
-  }, [connected, publicKey]);
-
-  if (!connected) {
-    return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-2xl font-bold">Connect Wallet</h1>
-          <p className="text-gray-600">Please connect your wallet to continue.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`p-6 max-w-7xl mx-auto ${className}`}>
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold">SOL-PERP Trading Dashboard</h1>
-        {error && <ErrorDisplay error={error} onRetry={() => setLoading(true)} />}
-        {loading ? <LoadingSpinner /> : <div>Strategy State: {JSON.stringify(strategyState)}</div>}
-      </div>
-    </div>
-  );
-}
+import React from "react";
+import { ErrorBoundary } from "../common/ErrorBoundary";
+import ConnectionTest from "../common/ConnectionTest";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface TradingDashboardProps {
   className?: string;
 }
 
-export function TradingDashboard(props: TradingDashboardProps): JSX.Element {
-  const { className = '' } = props;
+export function TradingDashboard({ className = "" }: TradingDashboardProps) {
+  const { publicKey } = useWallet();
+
   return (
     <ErrorBoundary>
-      <DashboardContent className={className} />
-   
+      <div className={`p-6 ${className}`}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-bold text-white">Trading Dashboard</h1>
+            <div className="text-slate-300">
+              {publicKey ? (
+                <span className="px-4 py-2 bg-green-500/10 text-green-400 rounded-md">
+                  Connected: {publicKey.toString().slice(0, 4)}...
+                  {publicKey.toString().slice(-4)}
+                </span>
+              ) : (
+                <span className="px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-md">
+                  Wallet Not Connected
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="lg:col-span-2">
+              <ConnectionTest />
+            </div>
+
+            <div className="bg-slate-800 rounded-lg p-6 shadow-lg">
+              <h2 className="text-xl font-semibold text-white mb-4">
+                Trading Interface
+              </h2>
+              <div className="text-slate-400">
+                Trading interface will be available once connection is established
+              </div>
+            </div>
+
+            <div className="bg-slate-800 rounded-lg p-6 shadow-lg">
+              <h2 className="text-xl font-semibold text-white mb-4">
+                Market Data
+              </h2>
+              <div className="text-slate-400">
+                Market data will be displayed here once connection is established
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 bg-slate-800/50 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">
+              Getting Started
+            </h2>
+            <ol className="list-decimal list-inside space-y-2 text-slate-300">
+              <li>Connect your Phantom wallet using the wallet button</li>
+              <li>
+                Ensure your wallet is set to Devnet (use the Connection Test panel
+                above)
+              </li>
+              <li>
+                Request devnet SOL from the faucet if needed (minimum 0.1 SOL
+                required)
+              </li>
+              <li>
+                Once all connections are verified, the trading interface will be
+                enabled
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </ErrorBoundary>
+  );
+}

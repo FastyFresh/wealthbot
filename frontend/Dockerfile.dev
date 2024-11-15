@@ -1,24 +1,47 @@
+# Development stage
 FROM node:20-alpine
 
-# Add dependencies for node-gyp
+# Create non-root user
+RUN addgroup -g 1001 -S app && \
+    adduser -u 1001 -S app -G app
+
+# Install build dependencies
 RUN apk add --no-cache python3 make g++
 
+# Set working directory and change ownership
 WORKDIR /app
+RUN chown -R app:app /app
 
-# Install dependencies
-COPY package*.json ./
-RUN npm ci --quiet && \
-    npm cache clean --force
+# Switch to non-root user
+USER app
 
-# Copy source
-COPY . .
+# Copy package files with proper ownership
+COPY --chown=app:app package*.json ./
 
-# Set development environment
+# Install dependencies with clean install and development tools
+RUN npm config set legacy-peer-deps true && \
+    npm ci && \
+    npm install -D vite@latest && \
+    npm install -g vite && \
+    npm install -D tailwindcss@latest postcss@latest autoprefixer@latest && \
+    npm install framer-motion@latest lucide-react@latest
+
+# Add node_modules/.bin to PATH
+ENV PATH /app/node_modules/.bin:$PATH
+
+# Copy source files with proper ownership
+COPY --chown=app:app . .
+
+# Generate Tailwind CSS
+RUN npx tailwindcss init -p
+
+# Set development environment variables
 ENV NODE_ENV=development
 ENV VITE_SOLANA_NETWORK=devnet
-ENV VITE_SOLANA_RPC_URL=https://api.devnet.solana.com
-ENV VITE_DRIFT_PROGRAM_ID=dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH
+ENV VITE_USE_SSL=false
 
+# Expose development port
 EXPOSE 3005
 
-CMD npm run dev -- --host 0.0.0.0 --port 3005
+# Start development server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3005"]

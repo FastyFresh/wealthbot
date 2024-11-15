@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3015:3015"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    environment:
+      - VITE_DEVNET_RPC_URL=https://api.devnet.solana.com
+      - NODE_ENV=development
+    command: npm run dev -- --host 0.0.0.0 --port 3015

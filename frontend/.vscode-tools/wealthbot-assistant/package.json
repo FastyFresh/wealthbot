@@ -1,0 +1,30 @@
+{
+    "name": "wealthbot-assistant",
+    "displayName": "Wealthbot Development Assistant",
+    "description": "AI-powered development assistant for Wealthbot",
+    "version": "0.0.1",
+    "publisher": "wealthbot",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": ["Other"],
+    "activationEvents": ["onCommand:wealthbot.analyzeCode"],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [{
+            "command": "wealthbot.analyzeCode",
+            "title": "Wealthbot: Analyze Code"
+        }]
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@types/vscode": "^1.60.0",
+        "typescript": "^4.3.5",
+        "@vscode/vsce": "^2.15.0"
+    }
+}
